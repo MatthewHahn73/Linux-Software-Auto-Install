@@ -1,5 +1,4 @@
 #!/bin/bash
-#Need to run with root permissions
 #BUGS:
     #Manoghud installation doesn't work properly even though it says so. Permission issue with the vm maybe?
 
@@ -7,8 +6,24 @@ InstallOptions=("$@")
 CurrentUser=`echo $USER`
 CurrentOS=`grep '^NAME' /etc/os-release` 
 CurrentOSReadable=`echo "$CurrentOS" | cut -d'"' -f 2`
+Verbose=false
 
-case $CurrentOSReadable in 
+if (( EUID != 0 )); then                                                #Determine if the script was run with the required root permissions
+    echo "'$(basename $0)' requires root permissions run" 1>&2
+    exit 1
+fi
+
+if [[ $(echo "${InstallOptions[@]}" | grep -F -w "verbose") ]]; then    #Determine if the verbose option was passed, if it was, set the flag and remove it from the list
+    Verbose=true 
+    TempArray=()
+    for Option in "${InstallOptions[@]}"; do 
+        [[ $Option != "verbose" ]] && TempArray+=("$Option")
+    done
+    InstallOptions=("${TempArray[@]}")
+    unset TempArray
+fi 
+
+case $CurrentOSReadable in                                              #Determine the user's package manager by distro name
     "Fedora Linux") 
         CurrentPackageManager="dnf" ;;
     "Ubuntu"|"Linux Mint"|"Debian")
@@ -19,7 +34,6 @@ case $CurrentOSReadable in
         echo "Error - Unsupported OS:" $CurrentOSReadable
 esac
 
-#Download a given tar file from github and extract to a given directory
 function FuncDownloadAndExtractRepo() {         
     local DownloadLocation="/home/$CurrentUser/Downloads/$1"
     local RepoLocation="https://api.github.com/repos/$2/releases/latest"
@@ -29,7 +43,7 @@ function FuncDownloadAndExtractRepo() {
     local DesiredURL=''
 
     for t in "${URLArray[@]}"; do   
-        if [ "${t: -${#Filetype}}" == $Filetype ]; then     #Find file(s) from releases
+        if [ "${t: -${#Filetype}}" == $Filetype ]; then     #Find desired file(s) from releases
             DesiredURL=$t
         fi 
     done
@@ -46,7 +60,6 @@ function FuncDownloadAndExtractRepo() {
     fi 
 }
 
-#Update the system 
 function FuncUpdateSystem() {
     if [ $CurrentPackageManager = "dnf" ]; then 
         dnf update -y
@@ -57,7 +70,6 @@ function FuncUpdateSystem() {
     fi 
 }
 
-#Install flatpak and add remote repos
 function FuncInstallFlatpak() { 
     if [ $CurrentPackageManager = "apt" ]; then 
         dnf install flatpak -y
@@ -158,16 +170,17 @@ function FuncInstallProtonge() {            #Download, Extract, and Install GE-P
     cp -r $ProtonDownloadFolder $ProtonSteamFolder
 }
 
-if [ $# -eq 0 ]; then 
+if [ "${#InstallOptions[@]}" -eq 0 ]; then 
     echo "No arguments supplied; Use 'help' for details"
 elif [ "${InstallOptions[0]//-/}" = "help" ]; then 
     Output="
         Usage: $(basename $0) [OPTIONS]\n
         Permission requiremnts: root\n
-        Supports: Ubuntu, Fedora, Arch\n
+        Supports: Ubuntu, Mint, Fedora, Arch\n
         \n
         Options:\n
         help\t\t        Show available install options\n
+        verbose\t       Output all details to the console\n
         steam\t\t       Installs the Steam client\n
         lutris\t\t      Installs the Lutris client\n
         heroic\t\t      Installs the Heroic client\n
@@ -192,9 +205,18 @@ else
         fi 
     done
 
-    FuncUpdateSystem
+    echo "Updating system ... "
+    if $Verbose; then 
+        FuncUpdateSystem
+    else 
+        FuncUpdateSystem >/dev/null
+    fi 
     for Options in "${ParsedInstallOptions[@]}"; do         #If we made it here, all looks good. Run desired installations
         echo "Installing $Options ... "
-        FuncInstall${Options^}
+        if $Verbose; then 
+            FuncInstall${Options^}
+        else 
+            FuncInstall${Options^} >/dev/null
+        fi 
     done
 fi
