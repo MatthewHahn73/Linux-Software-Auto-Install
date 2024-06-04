@@ -1,6 +1,11 @@
 #!/bin/bash
 #BUGS:
     #Manoghud installation doesn't work properly even though it says so. Permission issue with the vm maybe?
+    #Some console output makes it through even without verbose. Need to find and correct with a conditional
+
+#TODO: 
+    #Install an arch VM to test the arch installations
+    #Test the newsly created install functions for Flatseal, VSCode, Emacs, Git, and the Proton Apps
 
 InstallOptions=("$@")
 CurrentUser=`echo $USER`
@@ -81,6 +86,110 @@ function FuncInstallFlatpak() {
     flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 }
 
+function FuncInstallFlatseal() {
+    flatpak install flathub com.github.tchx84.Flatseal -y
+}
+
+function FuncInstallVscode() {
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        rpm --import https://packages.microsoft.com/keys/microsoft.asc 
+        echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" | tee /etc/yum.repos.d/vscode.repo > /dev/null
+        dnf check-update && dnf install code -y
+    elif [ $CurrentPackageManager = "apt" ]; then
+        apt-get install wget gpg
+        wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg 
+        install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg 
+        echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | tee /etc/apt/sources.list.d/vscode.list > /dev/null
+        rm -f packages.microsoft.gpg
+        apt update && apt install code -y
+    elif [ $CurrentPackageManager = "pacman" ]; then 
+        sudo pacman -S code --noconfirm
+    fi 
+}
+
+function FuncInstallEmacs() { 
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        dnf install emacs -y
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        apt install emacs -y
+    elif [ $CurrentPackageManager = "pacman" ]; then    
+        pacman -S emacs --noconfirm
+    fi 
+}
+
+function FuncInstallGit() { 
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        dnf install git -y
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        apt install git -y
+    elif [ $CurrentPackageManager = "pacman" ]; then 
+        pacman -S git --noconfirm
+    fi 
+}
+
+function FuncInstallProtonvpn() {
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        wget "https://repo.protonvpn.com/fedora-$(cat /etc/fedora-release | cut -d\  -f 3)-stable/protonvpn-stable-release/protonvpn-stable-release-1.0.1-2.noarch.rpm"
+        dnf install ./protonvpn-stable-release-1.0.1-2.noarch.rpm 
+        dnf check-update && dnf install --refresh proton-vpn-gnome-desktop 
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        wget https://repo.protonvpn.com/debian/dists/stable/main/binary-all/protonvpn-stable-release_1.0.3-3_all.deb 
+        dpkg -i ./protonvpn-stable-release_1.0.3-3_all.deb 
+        apt update && apt install proton-vpn-gnome-desktop
+    elif [ $CurrentPackageManager = "pacman" ]; then 
+        pacman -S git python python-pythondialog python-pyxdg python-keyring python-jinja python-distro python-systemd python-requests python-bcrypt python-gnupg python-pyopenssl
+        cd "/home/"$USER"/Downloads/"
+        git clone https://aur.archlinux.org/protonvpn.git
+        git clone https://aur.archlinux.org/protonvpn-cli.git
+        git clone https://aur.archlinux.org/protonvpn-gui.git
+        git clone https://aur.archlinux.org/python-protonvpn-nm-lib.git
+        git clone https://aur.archlinux.org/python-proton-client.git
+        cd python-proton-client/
+        makepkg
+        pacman -U python-proton-client-* --noconfirm
+        cd ..
+        cd python-protonvpn-nm-lib/
+        makepkg
+        pacman -U python-protonvpn-nm-lib-* --noconfirm
+        cd ..
+        cd protonvpn-cli/
+        makepkg
+        pacman -U protonvpn-cli-* --noconfirm
+        cd ..
+        cd protonvpn-gui/
+        makepkg
+        pacman -U protonvpn-gui-* --noconfirm
+        cd ..
+        cd protonvpn/
+        makepkg
+        pacman -U protonvpn-* --noconfirm
+        cd ..
+        rm -rf python-proton-client/
+        rm -rf python-protonvpn-nm-lib/ 
+        rm -rf protonvpn-cli/
+        rm -rf protonvpn-gui/
+        rm -rf protonvpn/
+    fi 
+}
+
+function FuncInstallProtonmail() { 
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        wget -q -O ProtonMail-desktop.rpm https://proton.me/download/mail/linux/ProtonMail-desktop-beta.rpm
+        rpm -i ProtonMail-desktop.rpm
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        wget -q -O ProtonMail-desktop.rpm https://proton.me/download/mail/linux/ProtonMail-desktop-beta.deb
+        dpkg -i ProtonMail-desktop.deb
+    elif [ $CurrentPackageManager = "pacman" ]; then 
+        cd "/home/"$USER"/Downloads/"
+        git clone https://aur.archlinux.org/protonmail-desktop.git 
+        cd protonmail-desktop/
+        makepkg
+        pacman -U protonmail-desktop-* --noconfirm
+        cd ..
+        rm -rf protonmail-desktop/
+    fi 
+}
+
 function FuncInstallSteam() {
     if [ $CurrentPackageManager = "dnf" ]; then 
         dnf install https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
@@ -122,7 +231,6 @@ function FuncInstallSignal() {
         echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/signal-desktop-keyring.gpg] https://updates.signal.org/desktop/apt xenial main' | tee /etc/apt/sources.list.d/signal-xenial.list
         apt update && apt install signal-desktop
     else    #Signal only officially supported on apt package manager, have to install the flatpak version otherwise
-        InstallFlatpak
         flatpak install flathub org.signal.Signal -y
     fi 
 }
@@ -133,7 +241,6 @@ function FuncInstallSpotify() {
         echo "deb http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list
         apt update && apt-get install spotify-client -y
     else    #Spotify only officially supported on apt package manager, have to install the flatpak version otherwise
-        InstallFlatpak
         flatpak install flathub com.spotify.Client -y
     fi 
 }
@@ -179,16 +286,23 @@ elif [ "${InstallOptions[0]//-/}" = "help" ]; then
         Supports: Ubuntu, Mint, Fedora, Arch\n
         \n
         Options:\n
-        help\t\t        Show available install options\n
-        verbose\t       Output all details to the console\n
-        steam\t\t       Installs the Steam client\n
-        lutris\t\t      Installs the Lutris client\n
-        heroic\t\t      Installs the Heroic client\n
-        discord\t       Installs the Discord client\n
-        signal\t\t      Installs the Signal client (Flatpak version if no apt)\n
-        spotify\t       Installs the Spotify client (Flatpak version if no apt)\n
-        mangohud\t      Installs the latest MangoHUD release via the repo install script\n
-        protonge\t      Installs the latest Glorious Eggroll Proton release and moves it to the steam compatibility folder (Assuming existing steam install)
+            help\t\t        Show available install options\n
+            verbose\t       Output all details to the console\n
+            emacs\t\t       Installs the GNU Emacs text editor\n
+            discord\t       Installs the Discord client\n
+            flatpak\t       Installs the Flatpak containerized package manager\n
+            flatseal\t      Installs Flatseal for managing Flatpak permissions
+            git\t\t         Installs git version control\n
+            heroic\t\t      Installs the Heroic client\n
+            lutris\t\t      Installs the Lutris client\n
+            mangohud\t      Installs the latest MangoHUD release via the repo install script\n
+            protonge\t      Installs the latest Glorious Eggroll Proton release (Assuming existing steam install)
+            protonmail\t    Installs the ProtonMail linux client\n
+            protonvpn\t     Installs the ProtonVPN linux client\n
+            signal\t\t      Installs the Signal client (Flatpak version if no apt)\n
+            spotify\t       Installs the Spotify client (Flatpak version if no apt)\n
+            steam\t\t       Installs the Steam client\n
+            vscode\t\t      Installs the Visual Studio Code text editor\n        
         "
     echo -e $Output
 else 
@@ -197,7 +311,7 @@ else
         ParsedInstallOptions+=("${Options//-/}")
     done
 
-    ValidPrograms=("Steam","Lutris","Heroic","Discord","Signal","Spotify","Mangohud","Protonge")
+    ValidPrograms=("Steam","Lutris","Heroic","Discord","Signal","Spotify","Mangohud","Protonge","Git","Vscode","Emacs","Protonvpn","Protonmail","Flatpak","Flatseal")
     for Options in "${ParsedInstallOptions[@]}"; do         #Check that passed parameters are valid, so they can safetly be used for function calls
         if ! [[ $(echo "${ValidPrograms[@]}" | grep -F -w "${Options^}") ]]; then     
             echo "Parameter '$Options' is not a valid install option; See 'help' for details"

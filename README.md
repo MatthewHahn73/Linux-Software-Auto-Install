@@ -1,22 +1,27 @@
 # linux-software-auto-install
 <p>Shell script to install some common software on a fresh linux installation</p>
 
-<h1>Script Arguments</h1>
+<h1>Basic Script Arguments</h1>
     <ul>
         <li>help - Show available install options</li>
         <li>verbose - Includes all script output</li>
-        <li>steam - Installs the steam client</li> 
-        <li>lutris - Installs the lutris client</li> 
-        <li>heroic - Installs the heroic client</li> 
-        <li>discord - Installs the discord client</li> 
-        <li>signal - Installs the signal client</li> 
-        <ul>
-            <li>Defaults to the flatpak version if not on an ubuntu-like distro</li>
-        </ul>
-        <li>spotify - Installs the spotify client</li>
-        <ul>
-            <li>Defaults to the flatpak version if not on an ubuntu-like distro</li>
-        </ul>
+    </ul>
+
+<h1>Install Script Arguments</h1>
+    <ul>
+        <li>emacs - Installs the GNU Emacs text editor</li>
+        <li>flatpak - Installs Flatpak<li>
+        <li>flatseal - Installs Flatseal for managing Flatpak permissions<li>
+        <li>git - Installs Git version control software</li>
+        <li>protonMail - Installs the ProtonMail linux client</li>
+        <li>protonVPN - Installs the ProtonVPN linux client</li>
+        <li>vscode - Installs the Visual Studio Code text editor</li>
+        <li>discord - Installs the Discord client</li>
+        <li>heroic - Installs the Heroic client</li>
+        <li>lutris - Installs the Lutris client</li>
         <li>mangohud - Installs the latest MangoHUD release from its repository</li>
         <li>protonge - Installs the latest Glorious Eggroll Proton release from its repository</li>
+        <li>signal - Installs the Signal client</li>
+        <li>spotify - Installs the Spotify client</li>
+        <li>steam - Installs the Steam client</li>
     </ul> 
