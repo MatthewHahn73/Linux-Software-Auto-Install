@@ -12,7 +12,6 @@
         <li>emacs - Installs the GNU Emacs text editor</li>
         <li>flatpak - Installs Flatpak<li>
         <li>flatseal - Installs Flatseal for managing Flatpak permissions<li>
-        <li>git - Installs Git version control software</li>
         <li>protonMail - Installs the ProtonMail linux client</li>
         <li>protonVPN - Installs the ProtonVPN linux client</li>
         <li>vscode - Installs the Visual Studio Code text editor</li>
