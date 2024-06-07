@@ -9,18 +9,18 @@ InstallOptions=("$@")
 CurrentUser=`echo $USER`
 CurrentOS=`grep '^NAME' /etc/os-release` 
 CurrentOSReadable=`echo "$CurrentOS" | cut -d'"' -f 2`
-Verbose=false
+Quiet=false
 
 if (( EUID != 0 )); then                                                #Determine if the script was run with the required root permissions
     echo "'$(basename $0)' requires root permissions run" 1>&2
     exit 1
 fi
 
-if [[ $(echo "${InstallOptions[@]}" | grep -F -w "verbose") ]]; then    #Determine if the verbose option was passed, if it was, set the flag and remove it from the list
-    Verbose=true 
+if [[ $(echo "${InstallOptions[@]}" | grep -F -w "quiet") ]]; then      #Determine if the verbose option was passed, if it was, set the flag and remove it from the list
+    Quiet=true 
     TempArray=()
     for Option in "${InstallOptions[@]}"; do 
-        [[ $Option != "verbose" ]] && TempArray+=("$Option")
+        [[ $Option != "quiet" ]] && TempArray+=("$Option")
     done
     InstallOptions=("${TempArray[@]}")
     unset TempArray
@@ -72,7 +72,7 @@ function FuncUpdateSystemAndInstallRequired() {
         apt-get install flatpak curl git -y
     elif [ $CurrentPackageManager = "pacman" ]; then 
         pacman -Syu --noconfirm
-        pacman -S flatpak curl git --noconfirm
+        pacman -S flatpak curl base-devel git --noconfirm --needed
     fi 
     flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 }
@@ -122,38 +122,28 @@ function FuncInstallProtonvpn() {
         apt-get update && apt-get install proton-vpn-gnome-desktop -y
         rm protonvpn-stable-release.deb
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S git python python-pythondialog python-pyxdg python-keyring python-jinja python-distro python-systemd python-requests python-bcrypt python-gnupg python-pyopenssl
-        cd "/home/"$USER"/Downloads/"
-        git clone https://aur.archlinux.org/protonvpn.git
-        git clone https://aur.archlinux.org/protonvpn-cli.git
-        git clone https://aur.archlinux.org/protonvpn-gui.git
-        git clone https://aur.archlinux.org/python-protonvpn-nm-lib.git
-        git clone https://aur.archlinux.org/python-proton-client.git
-        cd python-proton-client/
-        makepkg
-        pacman -U python-proton-client-* --noconfirm
+        local DownloadDir="/home/"$CurrentUser"/Downloads/"
+    
+        #Install yay to find missing dependencies
+        cd $DownloadDir
+        git clone https://aur.archlinux.org/yay-git.git    
+        cd yay-git
+        chmod a+w $DownloadDir/yay-git/ 
+        runuser -u $CurrentUser -- makepkg -si
         cd ..
-        cd python-protonvpn-nm-lib/
-        makepkg
-        pacman -U python-protonvpn-nm-lib-* --noconfirm
+        rm -rf yay-git/
+
+        #Install dependencies
+        runuser -u $CurrentUser -- yay -S python-proton-core python-proton-vpn-api-core python-proton-vpn-connection python-proton-keyring-linux python-proton-keyring-linux-secretservice python-proton-vpn-logger python-proton-vpn-network-manager python-proton-vpn-network-manager-openvpn python-proton-vpn-killswitch python-proton-vpn-killswitch-network-manager python-aiohttp python-bcrypt python-distro python-gnupg python-jinja python-requests python-pynacl python-pyopenssl python-sentry_sdk webkit2gtk dbus-python --noconfirm
+
+        #Install VPN
+        cd $DownloadDir
+        git clone https://aur.archlinux.org/proton-vpn-gtk-app.git
+        cd proton-vpn-gtk-app/
+        chmod a+w $DownloadDir/proton-vpn-gtk-app/
+        runuser -u $CurrentUser -- makepkg -si
         cd ..
-        cd protonvpn-cli/
-        makepkg
-        pacman -U protonvpn-cli-* --noconfirm
-        cd ..
-        cd protonvpn-gui/
-        makepkg
-        pacman -U protonvpn-gui-* --noconfirm
-        cd ..
-        cd protonvpn/
-        makepkg
-        pacman -U protonvpn-* --noconfirm
-        cd ..
-        rm -rf python-proton-client/
-        rm -rf python-protonvpn-nm-lib/ 
-        rm -rf protonvpn-cli/
-        rm -rf protonvpn-gui/
-        rm -rf protonvpn/
+        rm -rf proton-vpn-gtk-app/
     fi 
 }
 
@@ -169,11 +159,12 @@ function FuncInstallProtonmail() {
         dpkg -i ProtonMail-desktop.deb
         rm ProtonMail-desktop.deb
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        cd "/home/"$USER"/Downloads/"
+        local DownloadDir="/home/"$CurrentUser"/Downloads/"
+        cd $DownloadDir
         git clone https://aur.archlinux.org/protonmail-desktop.git 
         cd protonmail-desktop/
-        makepkg
-        pacman -U protonmail-desktop-* --noconfirm
+        chmod a+w $DownloadDir/protonmail-desktop/
+        runuser -u $CurrentUser -- makepkg -si
         cd ..
         rm -rf protonmail-desktop/
     fi 
@@ -189,7 +180,7 @@ function FuncInstallSteam() {
         apt install ./steam.deb -y
         rm steam.deb 
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S steam --noconfirm
+        flatpak install flathub com.valvesoftware.Steam -y
     fi 
 }
 
@@ -249,27 +240,21 @@ function FuncInstallHeroic() {
         cd $HeroicDownloadDir
         dpkg -i $HeroicDebFile
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        cd "/home/"$CurrentUser"/Downloads/"
+        local DownloadDir="/home/"$CurrentUser"/Downloads/"
+        cd $DownloadDir
         git clone https://aur.archlinux.org/heroic-games-launcher.git
         cd heroic-games-launcher/
-        makepkg
-        pacman -U heroic-games-launcher.git --noconfirm
+        chmod a+w $DownloadDir/heroic-games-launcher/
+        runuser -u $CurrentUser -- makepkg -si --noconfirm
         cd ..
         rm -rf heroic-games-launcher/
     fi 
 }
 
 function FuncInstallMangohud() {       
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        dnf install mangohud -y
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        apt-get install mangohud -y
-    elif [ $CurrentPackageManager = "pacman" ]; then 
-        FuncDownloadAndExtractRepo "MangoHud" "flightlessmango/MangoHud" ".tar.gz"
-        local MangoHudFolder="/home/$CurrentUser/Downloads/MangoHud/"
-        cd $MangoHudFolder
-        ./mangohud-setup.sh install
-    fi 
+    FuncDownloadAndExtractRepo "MangoHud" "flightlessmango/MangoHud" ".tar.gz"
+    cd "/home/$CurrentUser/Downloads/MangoHud/MangoHud/"
+    ./mangohud-setup.sh install
 }
 
 function FuncInstallProtonge() {            #Download, Extract, and Install GE-Proton to the default (non-flatpak) compatibility folder in the steam directory
@@ -290,7 +275,7 @@ elif [ "${InstallOptions[0]//-/}" = "help" ]; then
         \n
         Options:\n
             help\t\t        Show available install options\n
-            verbose\t       Output all details to the console\n
+            quiet\t         Show less output in the console\n
             emacs\t\t       Installs the GNU Emacs text editor\n
             discord\t       Installs the Discord client\n
             flatseal\t      Installs Flatseal for managing Flatpak permissions\n
@@ -321,17 +306,17 @@ else
     done
 
     echo "Updating system ... "
-    if $Verbose; then 
-        FuncUpdateSystemAndInstallRequired
-    else 
+    if $Quiet; then 
         FuncUpdateSystemAndInstallRequired >/dev/null
+    else 
+        FuncUpdateSystemAndInstallRequired 
     fi 
     for Options in "${ParsedInstallOptions[@]}"; do         #If we made it here, all looks good. Run desired installations
         echo "Installing $Options ... "
-        if $Verbose; then 
-            FuncInstall${Options^}
-        else 
+        if $Quiet; then 
             FuncInstall${Options^} >/dev/null
+        else 
+            FuncInstall${Options^} 
         fi 
     done
 fi

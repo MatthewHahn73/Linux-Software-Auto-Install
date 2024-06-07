@@ -4,7 +4,7 @@
 <h1>Basic Script Arguments</h1>
     <ul>
         <li>help - Show available install options</li>
-        <li>verbose - Includes all script output</li>
+        <li>quiet - Show less output in the console</li>
     </ul>
 
 <h1>Install Script Arguments</h1>
@@ -12,8 +12,8 @@
         <li>emacs - Installs the GNU Emacs text editor</li>
         <li>flatpak - Installs Flatpak</li>
         <li>flatseal - Installs Flatseal for managing Flatpak permissions</li>
-        <li>protonMail - Installs the ProtonMail linux client</li>
-        <li>protonVPN - Installs the ProtonVPN linux client</li>
+        <li>protonmail - Installs the ProtonMail linux client</li>
+        <li>protonvpn - Installs the ProtonVPN linux client</li>
         <li>vscode - Installs the Visual Studio Code text editor</li>
         <li>discord - Installs the Discord client</li>
         <li>heroic - Installs the Heroic client</li>
