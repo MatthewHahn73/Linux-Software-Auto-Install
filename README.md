@@ -1,6 +1,31 @@
 # linux-software-auto-install
 <p>Shell script to install some common software on a fresh linux installation</p>
 
+<h1>Supported Operating Systems</h1>
+    <ul>
+        <li>RPM-based</li>
+        <ul>
+            <li>Fedora</li>
+            <li>SUSE</li>
+            <li>CentOS</li>
+            <li>Nobara</li>
+        </ul>
+        <li>DKPG-based</li>
+        <ul>
+            <li>Ubuntu & Ubuntu variants (Lubuntu, Xubuntu, Kubuntu)</li>
+            <li>Elementary</li>
+            <li>PopOS</li>
+            <li>Mint</li>
+            <li>Debian</li>
+        </ul>
+        <li>Pacman-based</li>
+        <ul>
+            <li>Arch</li>
+            <li>EndeavourOS</li>
+            <li>Manjaro</li>
+        </ul>
+    </ul>
+
 <h1>Basic Script Arguments</h1>
     <ul>
         <li>help - Show available install options</li>

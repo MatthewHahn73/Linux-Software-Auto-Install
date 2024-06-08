@@ -1,9 +1,7 @@
 #!/bin/bash
 
 #TODO: 
-    #Install an arch VM to test the arch installations
-        #Test the newly created install functions for Flatseal, VSCode, Emacs, and the Proton Apps on arch
-    #Find a way to properly install the latest version of mangohud 
+    #Add options for Brave, VSCodium, VLC Media Player, Bottles, Freetube, Kodi, Gnome-Boxes, Proton Calandar, Proton Pass
 
 InstallOptions=("$@")
 CurrentUser=`echo $USER`
@@ -26,15 +24,16 @@ if [[ $(echo "${InstallOptions[@]}" | grep -F -w "quiet") ]]; then      #Determi
     unset TempArray
 fi 
 
-case $CurrentOSReadable in                                              #Determine the user's package manager by distro name
-    "Fedora Linux") 
+case "$CurrentOSReadable" in                                            #Determine the user's package manager by distro name
+    *Fedora*|*SUSE*|*CentOS*|*Nobara*) 
         CurrentPackageManager="dnf" ;;
-    "Ubuntu"|"Linux Mint"|"Debian")
+    *Ubuntu*|*Lubuntu*|*Xubuntu*|*Kubuntu*|*Elementary*|*Pop*|*Mint*|*Debian*)
         CurrentPackageManager="apt" ;; 
-    "Arch Linux") 
+    *Arch*|*Endeavour*|*Manjaro*) 
         CurrentPackageManager="pacman" ;;
     *) 
         echo "Error - Unsupported OS:" $CurrentOSReadable
+        exit 1
 esac
 
 function FuncDownloadAndExtractRepo() {         
@@ -72,9 +71,13 @@ function FuncUpdateSystemAndInstallRequired() {
         apt-get install flatpak curl git -y
     elif [ $CurrentPackageManager = "pacman" ]; then 
         pacman -Syu --noconfirm
-        pacman -S flatpak curl base-devel git --noconfirm --needed
+        pacman -S flatpak curl git --noconfirm --needed
     fi 
     flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+}
+
+function FuncInstallBrave() {
+    echo "TODO"
 }
 
 function FuncInstallFlatseal() {
@@ -98,6 +101,10 @@ function FuncInstallVscode() {
     fi 
 }
 
+function FuncInstallVscodium() { 
+    echo "TODO"
+}
+
 function FuncInstallEmacs() { 
     if [ $CurrentPackageManager = "dnf" ]; then 
         dnf install emacs -y
@@ -106,6 +113,14 @@ function FuncInstallEmacs() {
     elif [ $CurrentPackageManager = "pacman" ]; then    
         pacman -S emacs --noconfirm
     fi 
+}
+
+function FuncInstallBoxes() { 
+    echo "TODO"
+}
+
+function FuncInstallBottles() {
+    echo "TODO"
 }
 
 function FuncInstallProtonvpn() {
@@ -170,6 +185,14 @@ function FuncInstallProtonmail() {
     fi 
 }
 
+function FuncInstallProtoncalendar() {
+    echo "TODO"
+}
+
+function FuncInstallProtonpass() {
+    echo "TODO"
+}
+
 function FuncInstallSteam() {
     if [ $CurrentPackageManager = "dnf" ]; then 
         dnf install https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
@@ -181,6 +204,30 @@ function FuncInstallSteam() {
         rm steam.deb 
     elif [ $CurrentPackageManager = "pacman" ]; then 
         flatpak install flathub com.valvesoftware.Steam -y
+    fi 
+}
+
+function FuncInstallHeroic() {
+    local HeroicDownloadDir="/home/$CurrentUser/Downloads/Heroic/"
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        FuncDownloadAndExtractRepo "Heroic" "Heroic-Games-Launcher/HeroicGamesLauncher" ".rpm"
+        local HeroicRpmFile=`basename "$(find $HeroicDownloadDir -name "heroic-*.x86_64.rpm")"`
+        cd $HeroicDownloadDir
+        dnf install ./$HeroicRpmFile -y
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        FuncDownloadAndExtractRepo "Heroic" "Heroic-Games-Launcher/HeroicGamesLauncher" ".deb"
+        local HeroicDebFile=`basename "$(find $HeroicDownloadDir -name "heroic_*_amd64.deb")"`
+        cd $HeroicDownloadDir
+        dpkg -i $HeroicDebFile
+    elif [ $CurrentPackageManager = "pacman" ]; then 
+        local DownloadDir="/home/"$CurrentUser"/Downloads/"
+        cd $DownloadDir
+        git clone https://aur.archlinux.org/heroic-games-launcher.git
+        cd heroic-games-launcher/
+        chmod a+w $DownloadDir/heroic-games-launcher/
+        runuser -u $CurrentUser -- makepkg -si --noconfirm
+        cd ..
+        rm -rf heroic-games-launcher/ 
     fi 
 }
 
@@ -227,34 +274,14 @@ function FuncInstallSpotify() {
     fi 
 }
 
-function FuncInstallHeroic() {
-    local HeroicDownloadDir="/home/$CurrentUser/Downloads/Heroic/"
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        FuncDownloadAndExtractRepo "Heroic" "Heroic-Games-Launcher/HeroicGamesLauncher" ".rpm"
-        local HeroicRpmFile=`basename "$(find $HeroicDownloadDir -name "heroic-*.x86_64.rpm")"`
-        cd $HeroicDownloadDir
-        dnf install ./$HeroicRpmFile -y
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        FuncDownloadAndExtractRepo "Heroic" "Heroic-Games-Launcher/HeroicGamesLauncher" ".deb"
-        local HeroicDebFile=`basename "$(find $HeroicDownloadDir -name "heroic_*_amd64.deb")"`
-        cd $HeroicDownloadDir
-        dpkg -i $HeroicDebFile
-    elif [ $CurrentPackageManager = "pacman" ]; then 
-        local DownloadDir="/home/"$CurrentUser"/Downloads/"
-        cd $DownloadDir
-        git clone https://aur.archlinux.org/heroic-games-launcher.git
-        cd heroic-games-launcher/
-        chmod a+w $DownloadDir/heroic-games-launcher/
-        runuser -u $CurrentUser -- makepkg -si --noconfirm
-        cd ..
-        rm -rf heroic-games-launcher/
-    fi 
-}
-
 function FuncInstallMangohud() {       
-    FuncDownloadAndExtractRepo "MangoHud" "flightlessmango/MangoHud" ".tar.gz"
-    cd "/home/$CurrentUser/Downloads/MangoHud/MangoHud/"
-    ./mangohud-setup.sh install
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        dnf install mangohud -y
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        apt install mangohud -y
+    elif [ $CurrentPackageManager = "pacman" ]; then 
+        pacman -S discord --noconfirm
+    fi 
 }
 
 function FuncInstallProtonge() {            #Download, Extract, and Install GE-Proton to the default (non-flatpak) compatibility folder in the steam directory
@@ -265,17 +292,32 @@ function FuncInstallProtonge() {            #Download, Extract, and Install GE-P
     cp -r $ProtonDownloadFolder $ProtonSteamFolder
 }
 
+function FuncInstallVlc() {
+    echo "TODO"
+}
+
+function FuncInstallKodi() {
+    echo "TODO"
+}
+
+function FuncInstallFreetube() {
+    echo "TODO"
+}
+
 if [ "${#InstallOptions[@]}" -eq 0 ]; then 
     echo "No arguments supplied; Use 'help' for details"
 elif [ "${InstallOptions[0]//-/}" = "help" ]; then 
     Output="
         Usage: $(basename $0) [OPTIONS]\n
         Permission requiremnts: root\n
-        Supports: Ubuntu, Mint, Fedora, Arch\n
+        Supports:\n
+        RPM:\t\t       Fedora, SUSE, CentOS, Nobara\n
+        DKPG:\t\t      Ubuntu, Lubuntu, Xubuntu, Kubuntu, Elementary, PopOS, Mint, Debian\n 
+        Pacman:\t      Arch, EndeavourOS, Manjaro\n
         \n
         Options:\n
             help\t\t        Show available install options\n
-            quiet\t         Show less output in the console\n
+            quiet\t\t       Show less output in the console\n
             emacs\t\t       Installs the GNU Emacs text editor\n
             discord\t       Installs the Discord client\n
             flatseal\t      Installs Flatseal for managing Flatpak permissions\n
