@@ -1,12 +1,36 @@
 #!/bin/bash
 
 #TODO: 
-    #Add options for Brave, VSCodium, VLC Media Player, Bottles, Freetube, Kodi, Gnome-Boxes, Proton Calandar, Proton Pass
+    #Create install options for 
+        # LibreWolf
+        # Plex 
+        # Thunderbird
+        # ProtonUp-QT
+        # Warpinator
+        # Timeshift
+    #Test options for 
+        # Brave
+        # VSCodium 
+        # Gnome-Boxes
+        # Github Desktop
+            # Using the mirror on apt (Source is borked)
+        # Freetube 
+        # Kodi
+        # VLC Media Player 
+        # Bottles 
+        # Proton Pass
+
+#Auto confirm yay calls 
+    # See https://github.com/Jguer/yay/issues/1033
+
+#Look into a solution for validating existing installs
+    # Flatpaks can be checked with 'flatpak info "${appid}" >/dev/null 2>&1 && do_what_you_want_here'
 
 InstallOptions=("$@")
 CurrentUser=`echo $USER`
 CurrentOS=`grep '^NAME' /etc/os-release` 
 CurrentOSReadable=`echo "$CurrentOS" | cut -d'"' -f 2`
+DownloadDir="/home/"$CurrentUser"/Downloads"
 Quiet=false
 
 if (( EUID != 0 )); then                                                #Determine if the script was run with the required root permissions
@@ -25,7 +49,7 @@ if [[ $(echo "${InstallOptions[@]}" | grep -F -w "quiet") ]]; then      #Determi
 fi 
 
 case "$CurrentOSReadable" in                                            #Determine the user's package manager by distro name
-    *Fedora*|*SUSE*|*CentOS*|*Nobara*) 
+    *Fedora*|*CentOS*|*Nobara*) 
         CurrentPackageManager="dnf" ;;
     *Ubuntu*|*Lubuntu*|*Xubuntu*|*Kubuntu*|*Elementary*|*Pop*|*Mint*|*Debian*)
         CurrentPackageManager="apt" ;; 
@@ -72,37 +96,72 @@ function FuncUpdateSystemAndInstallRequired() {
     elif [ $CurrentPackageManager = "pacman" ]; then 
         pacman -Syu --noconfirm
         pacman -S flatpak curl git --noconfirm --needed
+        cd $DownloadDir    
+        git clone https://aur.archlinux.org/yay-git.git     #Install yay for AUR packages
+        cd yay-git
+        chmod a+w $DownloadDir/yay-git/ 
+        runuser -u $CurrentUser -- makepkg -si
+        cd ..
+        rm -rf yay-git/
     fi 
     flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-}
-
-function FuncInstallBrave() {
-    echo "TODO"
 }
 
 function FuncInstallFlatseal() {
     flatpak install flathub com.github.tchx84.Flatseal -y
 }
 
+function FuncInstallBrave() {
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        dnf install dnf-plugins-core -y
+        dnf config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo -y
+        rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc 
+        dnf install brave-browser -y    
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg 
+        echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main"| tee /etc/apt/sources.list.d/brave-browser-release.list
+        apt-get update && apt-get install brave-browser -y 
+    elif [ $CurrentPackageManager = "pacman" ]; then 
+        yay -S brave-bin
+    fi 
+}
+
 function FuncInstallVscode() {
     if [ $CurrentPackageManager = "dnf" ]; then 
         rpm --import https://packages.microsoft.com/keys/microsoft.asc 
-        echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" | tee /etc/yum.repos.d/vscode.repo > /dev/null
+        echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" \
+            | tee /etc/yum.repos.d/vscode.repo > /dev/null
         dnf check-update && dnf install code -y
     elif [ $CurrentPackageManager = "apt" ]; then
         apt-get install wget gpg
-        wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg 
+        wget -qO- https://packages.microsoft.com/keys/microsoft.asc \
+            | gpg --dearmor > packages.microsoft.gpg 
         install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg 
-        echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | tee /etc/apt/sources.list.d/vscode.list > /dev/null
+        echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" \
+            | tee /etc/apt/sources.list.d/vscode.list > /dev/null
         rm -f packages.microsoft.gpg
         apt-get update && apt-get install code -y
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        sudo pacman -S code --noconfirm
+        pacman -S code --noconfirm
     fi 
 }
 
 function FuncInstallVscodium() { 
-    echo "TODO"
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        rpmkeys --import https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/-/raw/master/pub.gpg 
+        printf "[gitlab.com_paulcarroty_vscodium_repo]\nname=download.vscodium.com\nbaseurl=https://download.vscodium.com/rpms/\nenabled=1\ngpgcheck=1\nrepo_gpgcheck=1\ngpgkey=https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/-/raw/master/pub.gpg\nmetadata_expire=1h" \
+            | tee -a /etc/yum.repos.d/vscodium.repo
+        dnf install codium -y
+    elif [ $CurrentPackageManager = "apt" ]; then
+        wget -qO - https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/master/pub.gpg \
+            | gpg --dearmor \
+            | dd of=/usr/share/keyrings/vscodium-archive-keyring.gpg
+        echo 'deb [ signed-by=/usr/share/keyrings/vscodium-archive-keyring.gpg ] https://download.vscodium.com/debs vscodium main' \
+            | tee /etc/apt/sources.list.d/vscodium.list
+        apt-get update && apt-get install codium -y
+    elif [ $CurrentPackageManager = "pacman" ]; then 
+        yay -S vscodium-bin -y
+    fi 
 }
 
 function FuncInstallEmacs() { 
@@ -116,49 +175,42 @@ function FuncInstallEmacs() {
 }
 
 function FuncInstallBoxes() { 
-    echo "TODO"
+    flatpak install flathub org.gnome.Boxes -y 
 }
 
-function FuncInstallBottles() {
-    echo "TODO"
+function FuncInstallGithub() {
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        rpm --import https://rpm.packages.shiftkey.dev/gpg.key
+        sh -c 'echo -e "[shiftkey-packages]\nname=GitHub Desktop\nbaseurl=https://rpm.packages.shiftkey.dev/rpm/\nenabled=1\ngpgcheck=1\nrepo_gpgcheck=1\ngpgkey=https://rpm.packages.shiftkey.dev/gpg.key" > /etc/yum.repos.d/shiftkey-packages.repo'    
+        dnf install github-desktop
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        wget -qO - https://mirror.mwt.me/shiftkey-desktop/gpgkey \
+            | gpg --dearmor \
+            | tee /usr/share/keyrings/mwt-desktop.gpg > /dev/null
+        sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/mwt-desktop.gpg] https://mirror.mwt.me/shiftkey-desktop/deb/ any main" > /etc/apt/sources.list.d/mwt-desktop.list'    
+        apt-get update && apt-get install github-desktop
+    elif [ $CurrentPackageManager = "pacman" ]; then    
+        yay -S github-desktop-bin 
+    fi 
 }
 
 function FuncInstallProtonvpn() {
     if [ $CurrentPackageManager = "dnf" ]; then 
         cd /home/$CurrentUser/Downloads
-        wget -O protonvpn-stable-release.rpm "https://repo.protonvpn.com/fedora-$(cat /etc/fedora-release | cut -d\  -f 3)-stable/protonvpn-stable-release/protonvpn-stable-release-1.0.1-2.noarch.rpm"
+        wget -O protonvpn-stable-release.rpm "https://repo.protonvpn.com/fedora-$(cat /etc/fedora-release \
+            | cut -d\  -f 3)-stable/protonvpn-stable-release/protonvpn-stable-release-1.0.1-2.noarch.rpm"
         dnf install ./protonvpn-stable-release.rpm -y
         dnf check-update && dnf install proton-vpn-gnome-desktop -y 
         rm protonvpn-stable-release.rpm
     elif [ $CurrentPackageManager = "apt" ]; then 
         cd /home/$CurrentUser/Downloads
-        wget wget -O protonvpn-stable-release.deb https://repo.protonvpn.com/debian/dists/stable/main/binary-all/protonvpn-stable-release_1.0.3-3_all.deb 
+        wget -O protonvpn-stable-release.deb https://repo.protonvpn.com/debian/dists/stable/main/binary-all/protonvpn-stable-release_1.0.3-3_all.deb 
         dpkg -i ./protonvpn-stable-release.deb
         apt-get update && apt-get install proton-vpn-gnome-desktop -y
         rm protonvpn-stable-release.deb
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        local DownloadDir="/home/"$CurrentUser"/Downloads/"
-    
-        #Install yay to find missing dependencies
-        cd $DownloadDir
-        git clone https://aur.archlinux.org/yay-git.git    
-        cd yay-git
-        chmod a+w $DownloadDir/yay-git/ 
-        runuser -u $CurrentUser -- makepkg -si
-        cd ..
-        rm -rf yay-git/
-
-        #Install dependencies
         runuser -u $CurrentUser -- yay -S python-proton-core python-proton-vpn-api-core python-proton-vpn-connection python-proton-keyring-linux python-proton-keyring-linux-secretservice python-proton-vpn-logger python-proton-vpn-network-manager python-proton-vpn-network-manager-openvpn python-proton-vpn-killswitch python-proton-vpn-killswitch-network-manager python-aiohttp python-bcrypt python-distro python-gnupg python-jinja python-requests python-pynacl python-pyopenssl python-sentry_sdk webkit2gtk dbus-python --noconfirm
-
-        #Install VPN
-        cd $DownloadDir
-        git clone https://aur.archlinux.org/proton-vpn-gtk-app.git
-        cd proton-vpn-gtk-app/
-        chmod a+w $DownloadDir/proton-vpn-gtk-app/
-        runuser -u $CurrentUser -- makepkg -si
-        cd ..
-        rm -rf proton-vpn-gtk-app/
+        yay -S proton-vpn-gtk-app 
     fi 
 }
 
@@ -174,23 +226,24 @@ function FuncInstallProtonmail() {
         dpkg -i ProtonMail-desktop.deb
         rm ProtonMail-desktop.deb
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        local DownloadDir="/home/"$CurrentUser"/Downloads/"
-        cd $DownloadDir
-        git clone https://aur.archlinux.org/protonmail-desktop.git 
-        cd protonmail-desktop/
-        chmod a+w $DownloadDir/protonmail-desktop/
-        runuser -u $CurrentUser -- makepkg -si
-        cd ..
-        rm -rf protonmail-desktop/
+        yay -S protonmail-desktop 
     fi 
 }
 
-function FuncInstallProtoncalendar() {
-    echo "TODO"
-}
-
 function FuncInstallProtonpass() {
-    echo "TODO"
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        cd /home/$CurrentUser/Downloads
+        wget -O ProtonPass-desktop.rpm https://proton.me/download/PassDesktop/linux/x64/ProtonPass.rpm
+        rpm -i ProtonPass-desktop.rpm
+        rm ProtonPass-desktop.rpm
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        cd /home/$CurrentUser/Downloads
+        wget -O ProtonPass-desktop.deb https://proton.me/download/PassDesktop/linux/x64/ProtonPass.deb
+        dpkg -i ProtonPass-desktop.deb
+        rm ProtonPass-desktop.deb
+    elif [ $CurrentPackageManager = "pacman" ]; then 
+        yay -S proton-pass 
+    fi 
 }
 
 function FuncInstallSteam() {
@@ -208,26 +261,18 @@ function FuncInstallSteam() {
 }
 
 function FuncInstallHeroic() {
-    local HeroicDownloadDir="/home/$CurrentUser/Downloads/Heroic/"
     if [ $CurrentPackageManager = "dnf" ]; then 
         FuncDownloadAndExtractRepo "Heroic" "Heroic-Games-Launcher/HeroicGamesLauncher" ".rpm"
-        local HeroicRpmFile=`basename "$(find $HeroicDownloadDir -name "heroic-*.x86_64.rpm")"`
-        cd $HeroicDownloadDir
+        local HeroicRpmFile=`basename "$(find $DownloadDir/Heroic -name "heroic-*.x86_64.rpm")"`
+        cd $DownloadDir/Heroic
         dnf install ./$HeroicRpmFile -y
     elif [ $CurrentPackageManager = "apt" ]; then 
         FuncDownloadAndExtractRepo "Heroic" "Heroic-Games-Launcher/HeroicGamesLauncher" ".deb"
-        local HeroicDebFile=`basename "$(find $HeroicDownloadDir -name "heroic_*_amd64.deb")"`
-        cd $HeroicDownloadDir
+        local HeroicDebFile=`basename "$(find $DownloadDir/Heroic -name "heroic_*_amd64.deb")"`
+        cd $DownloadDir/Heroic
         dpkg -i $HeroicDebFile
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        local DownloadDir="/home/"$CurrentUser"/Downloads/"
-        cd $DownloadDir
-        git clone https://aur.archlinux.org/heroic-games-launcher.git
-        cd heroic-games-launcher/
-        chmod a+w $DownloadDir/heroic-games-launcher/
-        runuser -u $CurrentUser -- makepkg -si --noconfirm
-        cd ..
-        rm -rf heroic-games-launcher/ 
+        yay -S heroic-games-launcher
     fi 
 }
 
@@ -255,9 +300,12 @@ function FuncInstallDiscord() {
 
 function FuncInstallSignal() {
     if [ $CurrentPackageManager = "apt" ]; then 
-        wget -O- https://updates.signal.org/desktop/apt/keys.asc | gpg --dearmor > signal-desktop-keyring.gpg
-        cat signal-desktop-keyring.gpg | tee /usr/share/keyrings/signal-desktop-keyring.gpg > /dev/null
-        echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/signal-desktop-keyring.gpg] https://updates.signal.org/desktop/apt xenial main' | tee /etc/apt/sources.list.d/signal-xenial.list
+        wget -O- https://updates.signal.org/desktop/apt/keys.asc \
+            | gpg --dearmor > signal-desktop-keyring.gpg
+        cat signal-desktop-keyring.gpg \
+            | tee /usr/share/keyrings/signal-desktop-keyring.gpg > /dev/null
+        echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/signal-desktop-keyring.gpg] https://updates.signal.org/desktop/apt xenial main' \
+            | tee /etc/apt/sources.list.d/signal-xenial.list
         apt-get update && apt-get install signal-desktop
     else    #Signal only officially supported on apt package manager, have to install the flatpak version otherwise
         flatpak install flathub org.signal.Signal -y
@@ -266,12 +314,37 @@ function FuncInstallSignal() {
 
 function FuncInstallSpotify() {
     if [ $CurrentPackageManager = "apt" ]; then 
-        curl -sS https://download.spotify.com/debian/pubkey_6224F9941A8AA6D1.gpg | gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg
-        echo "deb http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list
+        curl -sS https://download.spotify.com/debian/pubkey_6224F9941A8AA6D1.gpg \
+            | gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg
+        echo "deb http://repository.spotify.com stable non-free" \
+            | tee /etc/apt/sources.list.d/spotify.list
         apt-get update && apt-get install spotify-client -y
     else    #Spotify only officially supported on apt package manager, have to install the flatpak version otherwise
         flatpak install flathub com.spotify.Client -y
     fi 
+}
+
+function FuncInstallVlc() {
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm -y 
+        dnf install vlc -y 
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        apt install vlc -y 
+    elif [ $CurrentPackageManager = "pacman" ]; then 
+        pacman -S vlc --noconfirm
+    fi 
+}
+
+function FuncInstallKodi() {
+    flatpak install flathub tv.kodi.Kodi -y
+}
+
+function FuncInstallFreetube() {
+    flatpak install flathub io.freetubeapp.FreeTube -y
+}
+
+function FuncInstallBottles() {
+    flatpak install flathub com.usebottles.bottles -y 
 }
 
 function FuncInstallMangohud() {       
@@ -280,7 +353,7 @@ function FuncInstallMangohud() {
     elif [ $CurrentPackageManager = "apt" ]; then 
         apt install mangohud -y
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S discord --noconfirm
+        pacman -S mangohud --noconfirm
     fi 
 }
 
@@ -292,45 +365,43 @@ function FuncInstallProtonge() {            #Download, Extract, and Install GE-P
     cp -r $ProtonDownloadFolder $ProtonSteamFolder
 }
 
-function FuncInstallVlc() {
-    echo "TODO"
-}
-
-function FuncInstallKodi() {
-    echo "TODO"
-}
-
-function FuncInstallFreetube() {
-    echo "TODO"
-}
-
 if [ "${#InstallOptions[@]}" -eq 0 ]; then 
     echo "No arguments supplied; Use 'help' for details"
 elif [ "${InstallOptions[0]//-/}" = "help" ]; then 
     Output="
-        Usage: $(basename $0) [OPTIONS]\n
-        Permission requiremnts: root\n
+        $(basename $0)\n
+        Permission requirements: root\n\n
         Supports:\n
-        RPM:\t\t       Fedora, SUSE, CentOS, Nobara\n
+        RPM:\t\t       Fedora, CentOS, Nobara\n
         DKPG:\t\t      Ubuntu, Lubuntu, Xubuntu, Kubuntu, Elementary, PopOS, Mint, Debian\n 
         Pacman:\t      Arch, EndeavourOS, Manjaro\n
         \n
         Options:\n
-            help\t\t        Show available install options\n
             quiet\t\t       Show less output in the console\n
-            emacs\t\t       Installs the GNU Emacs text editor\n
+            help\t\t        Show available install options\n\n
+        Software:\n
+            bottles\t       Installs the wine software Bottles\n
+            boxes\t\t       Installs the gnome-boxes VM software\n
+            brave\t\t       Installs the Brave web browser\n
             discord\t       Installs the Discord client\n
+            emacs\t\t       Installs the GNU Emacs text editor\n
             flatseal\t      Installs Flatseal for managing Flatpak permissions\n
+            freetube\t      Installs the Freetube desktop app\n
+            github\t\t      Installs the linux port of the Github Desktop app\n
             heroic\t\t      Installs the Heroic client\n
+            kodi\t\t        Installs the Kodi media software app\n
             lutris\t\t      Installs the Lutris client\n
-            mangohud\t      Installs the latest MangoHUD release via the repo install script\n
-            protonge\t      Installs the latest Glorious Eggroll Proton release (Assuming existing steam install)\n
+            mangohud\t      Installs the MangoHUD gaming overlay\n
+            protonge\t      Installs the latest Glorious Eggroll Proton release\n
             protonmail\t    Installs the ProtonMail linux client\n
+            protonpass\t    Installs the ProtonPass linux client\n
             protonvpn\t     Installs the ProtonVPN linux client\n
-            signal\t\t      Installs the Signal client (Flatpak version if no apt)\n
-            spotify\t       Installs the Spotify client (Flatpak version if no apt)\n
+            signal\t\t      Installs the Signal client\n
+            spotify\t       Installs the Spotify client\n
             steam\t\t       Installs the Steam client\n
-            vscode\t\t      Installs the Visual Studio Code text editor\n        
+            vlc\t\t         Installs the VLC media player\n
+            vscode\t\t      Installs the Visual Studio Code text editor\n
+            vscodium\t      Installs the telemetry-free version of Visual Studio Code\n
         "
     echo -e $Output
 else 
@@ -339,7 +410,7 @@ else
         ParsedInstallOptions+=("${Options//-/}")
     done
 
-    ValidPrograms=("Steam","Lutris","Heroic","Discord","Signal","Spotify","Mangohud","Protonge","Vscode","Emacs","Protonvpn","Protonmail","Flatseal")
+    ValidPrograms=("Steam","Lutris","Heroic","Discord","Signal","Spotify","Mangohud","Protonge","Vscode","Emacs","Protonvpn","Protonmail","Protonpass","Flatseal","Brave","Vscodium","Boxes","Github","Freetube","Kodi","Vlc","Bottles")
     for Options in "${ParsedInstallOptions[@]}"; do         #Check that passed parameters are valid, so they can safetly be used for function calls
         if ! [[ $(echo "${ValidPrograms[@]}" | grep -F -w "${Options^}") ]]; then     
             echo "Parameter '$Options' is not a valid install option; See 'help' for details"
