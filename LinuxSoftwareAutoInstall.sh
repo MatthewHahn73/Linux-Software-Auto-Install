@@ -3,12 +3,31 @@
 #TODO
     # Look into a solution for validating existing installs
         # Flatpaks can be checked with 'flatpak info "${appid}" >/dev/null 2>&1 && do_what_you_want_here'
-    # Now that the user issue is resolved, re-write the mangohud function to query for the latest github release instead of using the package managers
+    # Now that the user issue is resolved, test mangohud hud install to ensure proper install 
+    # Add new install options:
+        # N/A
+    # Test new install options: 
+        # Falkon
+        # Evolution 
+        # Vim
+        # Dbeaver
+        # Telegram
+        # Skype
+        # Retroarch
+        # Gnome-Disks
+        # Disk Usage Analyzer 
+    # Add in a launch option to prioritize flatpaks, if available   
+        # Will need to update all functions with available flatpaks to install that instead if flag is enabled
+    # Change the way the ValidPrograms variable reads in the list of valid programs
+        # Read in from a file? 
+    # Create a function to determine if a program is already installed, either from flatpak or a regular package manager
+        # Return values?
 
 #Bugs
     # There seems to be a conflict of some files between proton-pass-debug and vscodium-bin-debug on arch
         # If one is installed, can't install the other 
         # Issue persists, even after an uninstall of the problem program
+            # Caching issue?
 
 InstallOptions=("$@")
 CurrentUser=`echo $SUDO_USER`
@@ -73,14 +92,14 @@ function FuncDownloadAndExtractRepo() {
 function FuncUpdateSystemAndInstallRequired() {
     if [ $CurrentPackageManager = "dnf" ]; then 
         dnf update -y
-        dnf install flatpak curl git -y
+        dnf install flatpak curl wget gpg git -y
     elif [ $CurrentPackageManager = "apt" ]; then 
         apt-get update -y && apt-get upgrade -y
-        apt-get install flatpak curl git -y
+        apt-get install flatpak curl wget gpg git -y
     elif [ $CurrentPackageManager = "pacman" ]; then 
         pacman -Syu --noconfirm
-        pacman -S flatpak curl git --noconfirm --needed
-        if ! pacman -Q | grep -q 'yay'; then                        #No yay installed
+        pacman -S flatpak curl git --noconfirm --needed             #Pacman doesn't require wget or gpg
+        if ! pacman -Q | grep -q 'yay'; then                        #Check for existing yay installation
             cd $DownloadDir    
             git clone https://aur.archlinux.org/yay-git.git         #Install yay for AUR packages
             cd yay-git
@@ -128,6 +147,16 @@ function FuncInstallLibrewolf() {
     fi 
 }
 
+function FuncInstallFalkon() {
+    if [ $CurrentPackageManager = "dnf" ]; then
+        dnf install falkon -y 
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        apt-get install falkon -y 
+    elif [ $CurrentPackageManager = "pacman" ]; then 
+        pacman -S falkon --noconfirm
+    fi 
+}
+
 function FuncInstallThunderbird() { 
     if [ $CurrentPackageManager = "dnf" ]; then
         dnf install thunderbird -y 
@@ -135,6 +164,16 @@ function FuncInstallThunderbird() {
         apt-get install thunderbird -y 
     elif [ $CurrentPackageManager = "pacman" ]; then 
         pacman -S thunderbird --noconfirm
+    fi 
+}
+
+function FuncInstallEvolution() {
+    if [ $CurrentPackageManager = "dnf" ]; then
+        dnf install evolution -y 
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        apt-get install evolution -y 
+    elif [ $CurrentPackageManager = "pacman" ]; then 
+        pacman -S evolution --noconfirm
     fi 
 }
 
@@ -155,7 +194,6 @@ function FuncInstallVscode() {
             | tee /etc/yum.repos.d/vscode.repo > /dev/null
         dnf check-update && dnf install code -y
     elif [ $CurrentPackageManager = "apt" ]; then
-        apt-get install wget gpg
         wget -qO- https://packages.microsoft.com/keys/microsoft.asc \
             | gpg --dearmor > packages.microsoft.gpg 
         install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg 
@@ -196,8 +234,30 @@ function FuncInstallEmacs() {
     fi 
 }
 
-function FuncInstallBoxes() { 
-    flatpak install flathub org.gnome.Boxes -y 
+function FuncInstallVim() {
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        dnf install vim -y
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        apt-get install vim -y
+    elif [ $CurrentPackageManager = "pacman" ]; then    
+        pacman -S vim --noconfirm
+    fi 
+}
+
+function FuncInstallDbeaver() {
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        cd /home/$CurrentUser/Downloads
+        wget -O dbeaver-desktop.rpm https://dbeaver.io/files/dbeaver-ce-latest-stable.x86_64.rpm
+        rpm -i dbeaver-desktop.rpm
+        rm dbeaver-desktop.rpm -y 
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        cd /home/$CurrentUser/Downloads
+        wget -O dbeaver-desktop.deb https://dbeaver.io/files/dbeaver-ce_latest_amd64.deb
+        rpm -i dbeaver-desktop.deb
+        rm dbeaver-desktop.deb -y 
+    elif [ $CurrentPackageManager = "pacman" ]; then    
+        pacman -S dbeaver --noconfirm
+    fi 
 }
 
 function FuncInstallGithub() {
@@ -213,6 +273,30 @@ function FuncInstallGithub() {
         apt-get update && apt-get install github-desktop -y
     elif [ $CurrentPackageManager = "pacman" ]; then  
         yes | runuser -u $CurrentUser -- yay -S github-desktop-bin
+    fi 
+}
+
+function FuncInstallBoxes() { 
+    flatpak install flathub org.gnome.Boxes -y 
+}
+
+function FuncInstallDisks() {
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        dnf install gnome-disks-utility -y 
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        apt-get install gnome-disks-utility -y 
+    elif [ $CurrentPackageManager = "pacman" ]; then    
+        pacman -S gnome-disks-utility --noconfirm
+    fi 
+}
+
+function FuncInstallDiskanalyzer() {
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        dnf install baobab -y 
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        apt-get install baobab -y 
+    elif [ $CurrentPackageManager = "pacman" ]; then    
+        pacman -S baobab --noconfirm
     fi 
 }
 
@@ -308,15 +392,36 @@ function FuncInstallLutris() {
     fi 
 }
 
+function FuncInstallRetroarch() {
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        dnf install retroarch -y
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        add-apt-repository ppa:libretro/stable 
+        apt-get update && apt-get install retroarch -y
+    elif [ $CurrentPackageManager = "pacman" ]; then 
+        pacman -S retroarch --noconfirm
+    fi 
+}
+
 function FuncInstallDiscord() {
     if [ $CurrentPackageManager = "dnf" ]; then 
         dnf install https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
         dnf install discord -y
     elif [ $CurrentPackageManager = "apt" ]; then 
-        wget "https://discord.com/api/download?platform=linux&format=deb" -O discord.deb
-        apt-get install ./discord.deb -y
+        wget -O discord.deb "https://discord.com/api/download?platform=linux&format=deb"
+        dpkg -i ./discord.deb -y
     elif [ $CurrentPackageManager = "pacman" ]; then 
         pacman -S discord --noconfirm
+    fi 
+}
+
+function FuncInstallTelegram() {
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        dnf install telegram-desktop -y
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        apt-get install telegram-desktop -y 
+    elif [ $CurrentPackageManager = "pacman" ]; then 
+        pacman -S telegram-desktop --noconfirm
     fi 
 }
 
@@ -329,8 +434,21 @@ function FuncInstallSignal() {
         echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/signal-desktop-keyring.gpg] https://updates.signal.org/desktop/apt xenial main' \
             | tee /etc/apt/sources.list.d/signal-xenial.list
         apt-get update && apt-get install signal-desktop
-    else    #Signal only officially supported on apt package manager, have to install the flatpak version otherwise
+    else    #Signal only officially supported on apt package manager
         flatpak install flathub org.signal.Signal -y
+    fi 
+}
+
+function FuncInstallSkype() {
+    if [ $CurrentPackageManager = "apt" ]; then 
+        curl -fsSL https://repo.skype.com/data/SKYPE-GPG-KEY \
+            | gpg --dearmor \
+            | tee /usr/share/keyrings/skype.gpg > /dev/null
+        echo deb [arch=amd64 signed-by=/usr/share/keyrings/skype.gpg] https://repo.skype.com/deb stable main \
+            | tee /etc/apt/sources.list.d/skype.list
+        apt-get update && apt-get install skypeforlinux -y 
+    else    #Skype only officially supported on apt package manager
+        flatpak install flathub com.skype.Client -y
     fi 
 }
 
@@ -341,7 +459,7 @@ function FuncInstallSpotify() {
         echo "deb http://repository.spotify.com stable non-free" \
             | tee /etc/apt/sources.list.d/spotify.list
         apt-get update && apt-get install spotify-client -y
-    else    #Spotify only officially supported on apt package manager, have to install the flatpak version otherwise
+    else    #Spotify only officially supported on apt package manager
         flatpak install flathub com.spotify.Client -y
     fi 
 }
@@ -373,16 +491,6 @@ function FuncInstallBottles() {
     flatpak install flathub com.usebottles.bottles -y 
 }
 
-function FuncInstallMangohud() {       
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        dnf install mangohud -y
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        apt install mangohud -y
-    elif [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S mangohud --noconfirm
-    fi 
-}
-
 function FuncInstallProtonupqt() {
     flatpak install flathub net.davidotek.pupgui2 -y 
 }
@@ -393,6 +501,13 @@ function FuncInstallProtonge() {
     local ProtonSteamFolder="/home/$CurrentUser/.steam/steam/compatibilitytools.d"
     mkdir -p $ProtonSteamFolder
     cp -r $ProtonDownloadFolder $ProtonSteamFolder
+}
+
+function FuncInstallMangohud() {            
+    FuncDownloadAndExtractRepo "MangoHud" "flightlessmango/MangoHud" ".tar.gz"
+    local MangoHudFolder="/home/$CurrentUser/Downloads/MangoHud/MangoHud/"
+    cd $MangoHudFolder
+    ./mangohud-setup.sh install
 }
 
 if [ "${#InstallOptions[@]}" -eq 0 ]; then 
@@ -411,13 +526,18 @@ elif [ "${InstallOptions[0]//-/}" = "help" ]; then
             help\t\t        Show available install options\n\n
         Software:\n
             bottles\t       Installs the wine software Bottles\n
-            boxes\t\t       Installs the gnome-boxes VM software\n
+            boxes\t\t       Installs the Gnome-Boxes VM software\n
             brave\t\t       Installs the Brave web browser\n
+            dbeaver\t       Installs the SQL editor\n
             discord\t       Installs the Discord client\n
             emacs\t\t       Installs the GNU Emacs text editor\n
+            evolution\t     Installs the Evolution mail client\n
+            falkon\t\t      Installs the Falkon web browser\n
             flatseal\t      Installs Flatseal for managing Flatpak permissions\n
             freetube\t      Installs the Freetube desktop app\n
             github\t\t      Installs the linux port of the Github Desktop app\n
+            gnomedisks\t    Installs Gnome Disks utility for managing partitions\n
+            diskanalyzer\t  Installs Gnome Disk Analyzer utility for viewing system storage\n
             heroic\t\t      Installs the Heroic client\n
             kodi\t\t        Installs the Kodi media server app\n
             librewolf\t     Installs the Librewolf web browser\n
@@ -429,11 +549,15 @@ elif [ "${InstallOptions[0]//-/}" = "help" ]; then
             protonpass\t    Installs the ProtonPass linux client\n
             protonupqt\t    Installs the ProtonUp-Qt compatibility tool\n
             protonvpn\t     Installs the ProtonVPN linux client\n
+            retroarch\t     Installs the Retroarch emulator frontend\n
             signal\t\t      Installs the Signal client\n
+            skype\t\t       Installs the Skype messaging app\n
             spotify\t       Installs the Spotify client\n
             steam\t\t       Installs the Steam client\n
+            telegram\t      Installs the Telegram messaging app\n
             thunderbird\t   Installs the Thunderbird mail client
             timeshift\t     Installs the Timeshift app\n
+            vim\t\t         Installs the terminal text editor vim\n
             vlc\t\t         Installs the VLC media player\n
             vscode\t\t      Installs the Visual Studio Code text editor\n
             vscodium\t      Installs the telemetry-free version of Visual Studio Code\n
@@ -445,7 +569,7 @@ else
         ParsedInstallOptions+=("${Options//-/}")
     done
 
-    ValidPrograms=("Steam","Lutris","Heroic","Discord","Signal","Spotify","Mangohud","Protonge","Vscode","Emacs","Protonvpn","Protonmail","Protonpass","Flatseal","Brave","Vscodium","Boxes","Github","Freetube","Kodi","Vlc","Bottles","Librewolf","Thunderbird","Timeshift","Plex","Protonupqt")
+    ValidPrograms=("Steam","Lutris","Heroic","Discord","Signal","Spotify","Mangohud","Protonge","Vscode","Emacs","Protonvpn","Protonmail","Protonpass","Flatseal","Brave","Vscodium","Boxes","Github","Freetube","Kodi","Vlc","Bottles","Librewolf","Thunderbird","Timeshift","Plex","Protonupqt","Falkon","Evolution","Vim","Dbeaver","Telegram","Skype","Retroarch","Disks","Diskanalyzer")
     for Options in "${ParsedInstallOptions[@]}"; do         #Check that passed parameters are valid, so they can safetly be used for function calls
         if ! [[ $(echo "${ValidPrograms[@]}" | grep -F -w "${Options^}") ]]; then     
             echo "Parameter '$Options' is not a valid install option; See 'help' for details"
