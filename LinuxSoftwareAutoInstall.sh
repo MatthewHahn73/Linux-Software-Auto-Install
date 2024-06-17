@@ -1,33 +1,17 @@
 #!/bin/bash
 
-#TODO: 
-    #Create install options for 
-        # LibreWolf
-        # Plex 
-        # Thunderbird
-        # ProtonUp-QT
-        # Warpinator
-        # Timeshift
-    #Test options for 
-        # Brave
-        # VSCodium 
-        # Gnome-Boxes
-        # Github Desktop
-            # Using the mirror on apt (Source is borked)
-        # Freetube 
-        # Kodi
-        # VLC Media Player 
-        # Bottles 
-        # Proton Pass
+#TODO
+    # Look into a solution for validating existing installs
+        # Flatpaks can be checked with 'flatpak info "${appid}" >/dev/null 2>&1 && do_what_you_want_here'
+    # Now that the user issue is resolved, re-write the mangohud function to query for the latest github release instead of using the package managers
 
-#Auto confirm yay calls 
-    # See https://github.com/Jguer/yay/issues/1033
-
-#Look into a solution for validating existing installs
-    # Flatpaks can be checked with 'flatpak info "${appid}" >/dev/null 2>&1 && do_what_you_want_here'
+#Bugs
+    # There seems to be a conflict of some files between proton-pass-debug and vscodium-bin-debug on arch
+        # If one is installed, can't install the other 
+        # Issue persists, even after an uninstall of the problem program
 
 InstallOptions=("$@")
-CurrentUser=`echo $USER`
+CurrentUser=`echo $SUDO_USER`
 CurrentOS=`grep '^NAME' /etc/os-release` 
 CurrentOSReadable=`echo "$CurrentOS" | cut -d'"' -f 2`
 DownloadDir="/home/"$CurrentUser"/Downloads"
@@ -38,7 +22,7 @@ if (( EUID != 0 )); then                                                #Determi
     exit 1
 fi
 
-if [[ $(echo "${InstallOptions[@]}" | grep -F -w "quiet") ]]; then      #Determine if the verbose option was passed, if it was, set the flag and remove it from the list
+if [[ $(echo "${InstallOptions[@]}" | grep -F -w "quiet") ]]; then      #Determine if the quiet option was passed, if it was, set the flag and remove it from the list
     Quiet=true 
     TempArray=()
     for Option in "${InstallOptions[@]}"; do 
@@ -96,13 +80,15 @@ function FuncUpdateSystemAndInstallRequired() {
     elif [ $CurrentPackageManager = "pacman" ]; then 
         pacman -Syu --noconfirm
         pacman -S flatpak curl git --noconfirm --needed
-        cd $DownloadDir    
-        git clone https://aur.archlinux.org/yay-git.git     #Install yay for AUR packages
-        cd yay-git
-        chmod a+w $DownloadDir/yay-git/ 
-        runuser -u $CurrentUser -- makepkg -si
-        cd ..
-        rm -rf yay-git/
+        if ! pacman -Q | grep -q 'yay'; then                        #No yay installed
+            cd $DownloadDir    
+            git clone https://aur.archlinux.org/yay-git.git         #Install yay for AUR packages
+            cd yay-git
+            chmod a+w $DownloadDir/yay-git/ 
+            yes | runuser -u $CurrentUser -- makepkg -si
+            cd ..
+            rm -rf yay-git/
+        fi
     fi 
     flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 }
@@ -122,7 +108,43 @@ function FuncInstallBrave() {
         echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main"| tee /etc/apt/sources.list.d/brave-browser-release.list
         apt-get update && apt-get install brave-browser -y 
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        yay -S brave-bin
+        yes | runuser -u $CurrentUser -- yay -S brave-bin
+    fi 
+}
+
+function FuncInstallLibrewolf() {
+    if [ $CurrentPackageManager = "dnf" ]; then
+        curl -fsSL https://rpm.librewolf.net/librewolf-repo.repo | pkexec tee /etc/yum.repos.d/librewolf.repo 
+        dnf install librewolf -y 
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        distro=$(if echo " bullseye focal impish jammy uma una " \
+            | grep -q " $(lsb_release -sc) "; then echo $(lsb_release -sc); else echo focal; fi)
+        echo "deb [arch=amd64] http://deb.librewolf.net $distro main" \
+            | tee /etc/apt/sources.list.d/librewolf.list
+        wget https://deb.librewolf.net/keyring.gpg -O /etc/apt/trusted.gpg.d/librewolf.gpg
+        apt-get update && apt-get install librewolf -y
+    elif [ $CurrentPackageManager = "pacman" ]; then 
+        yes | runuser -u $CurrentUser -- yay -S librewolf-bin
+    fi 
+}
+
+function FuncInstallThunderbird() { 
+    if [ $CurrentPackageManager = "dnf" ]; then
+        dnf install thunderbird -y 
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        apt-get install thunderbird -y 
+    elif [ $CurrentPackageManager = "pacman" ]; then 
+        pacman -S thunderbird --noconfirm
+    fi 
+}
+
+function FuncInstallTimeshift() {
+    if [ $CurrentPackageManager = "dnf" ]; then
+        dnf install timeshift -y 
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        apt-get install timeshift -y 
+    elif [ $CurrentPackageManager = "pacman" ]; then 
+        yes | runuser -u $CurrentUser -- yay -S timeshift
     fi 
 }
 
@@ -160,7 +182,7 @@ function FuncInstallVscodium() {
             | tee /etc/apt/sources.list.d/vscodium.list
         apt-get update && apt-get install codium -y
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        yay -S vscodium-bin -y
+        yes | runuser -u $CurrentUser -- yay -S vscodium-bin
     fi 
 }
 
@@ -182,15 +204,15 @@ function FuncInstallGithub() {
     if [ $CurrentPackageManager = "dnf" ]; then 
         rpm --import https://rpm.packages.shiftkey.dev/gpg.key
         sh -c 'echo -e "[shiftkey-packages]\nname=GitHub Desktop\nbaseurl=https://rpm.packages.shiftkey.dev/rpm/\nenabled=1\ngpgcheck=1\nrepo_gpgcheck=1\ngpgkey=https://rpm.packages.shiftkey.dev/gpg.key" > /etc/yum.repos.d/shiftkey-packages.repo'    
-        dnf install github-desktop
+        dnf install github-desktop -y
     elif [ $CurrentPackageManager = "apt" ]; then 
         wget -qO - https://mirror.mwt.me/shiftkey-desktop/gpgkey \
             | gpg --dearmor \
             | tee /usr/share/keyrings/mwt-desktop.gpg > /dev/null
         sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/mwt-desktop.gpg] https://mirror.mwt.me/shiftkey-desktop/deb/ any main" > /etc/apt/sources.list.d/mwt-desktop.list'    
-        apt-get update && apt-get install github-desktop
-    elif [ $CurrentPackageManager = "pacman" ]; then    
-        yay -S github-desktop-bin 
+        apt-get update && apt-get install github-desktop -y
+    elif [ $CurrentPackageManager = "pacman" ]; then  
+        yes | runuser -u $CurrentUser -- yay -S github-desktop-bin
     fi 
 }
 
@@ -209,8 +231,8 @@ function FuncInstallProtonvpn() {
         apt-get update && apt-get install proton-vpn-gnome-desktop -y
         rm protonvpn-stable-release.deb
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        runuser -u $CurrentUser -- yay -S python-proton-core python-proton-vpn-api-core python-proton-vpn-connection python-proton-keyring-linux python-proton-keyring-linux-secretservice python-proton-vpn-logger python-proton-vpn-network-manager python-proton-vpn-network-manager-openvpn python-proton-vpn-killswitch python-proton-vpn-killswitch-network-manager python-aiohttp python-bcrypt python-distro python-gnupg python-jinja python-requests python-pynacl python-pyopenssl python-sentry_sdk webkit2gtk dbus-python --noconfirm
-        yay -S proton-vpn-gtk-app 
+        yes | runuser -u $CurrentUser -- yay -S python-proton-core python-proton-vpn-api-core python-proton-vpn-connection python-proton-keyring-linux python-proton-keyring-linux-secretservice python-proton-vpn-logger python-proton-vpn-network-manager python-proton-vpn-network-manager-openvpn python-proton-vpn-killswitch python-proton-vpn-killswitch-network-manager python-aiohttp python-bcrypt python-distro python-gnupg python-jinja python-requests python-pynacl python-pyopenssl python-sentry_sdk webkit2gtk dbus-python --noconfirm
+        yes | runuser -u $CurrentUser -- yay -S proton-vpn-gtk-app
     fi 
 }
 
@@ -226,7 +248,7 @@ function FuncInstallProtonmail() {
         dpkg -i ProtonMail-desktop.deb
         rm ProtonMail-desktop.deb
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        yay -S protonmail-desktop 
+        yes | runuser -u $CurrentUser -- yay -S protonmail-desktop
     fi 
 }
 
@@ -241,8 +263,8 @@ function FuncInstallProtonpass() {
         wget -O ProtonPass-desktop.deb https://proton.me/download/PassDesktop/linux/x64/ProtonPass.deb
         dpkg -i ProtonPass-desktop.deb
         rm ProtonPass-desktop.deb
-    elif [ $CurrentPackageManager = "pacman" ]; then 
-        yay -S proton-pass 
+    elif [ $CurrentPackageManager = "pacman" ]; then
+        yes | runuser -u $CurrentUser -- yay -S proton-pass
     fi 
 }
 
@@ -272,7 +294,7 @@ function FuncInstallHeroic() {
         cd $DownloadDir/Heroic
         dpkg -i $HeroicDebFile
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        yay -S heroic-games-launcher
+        yes | runuser -u $CurrentUser -- yay -S heroic-games-launcher
     fi 
 }
 
@@ -339,6 +361,10 @@ function FuncInstallKodi() {
     flatpak install flathub tv.kodi.Kodi -y
 }
 
+function FuncInstallPlex() {
+    flatpak install flathub tv.plex.PlexDesktop -y 
+}
+
 function FuncInstallFreetube() {
     flatpak install flathub io.freetubeapp.FreeTube -y
 }
@@ -357,7 +383,11 @@ function FuncInstallMangohud() {
     fi 
 }
 
-function FuncInstallProtonge() {            #Download, Extract, and Install GE-Proton to the default (non-flatpak) compatibility folder in the steam directory
+function FuncInstallProtonupqt() {
+    flatpak install flathub net.davidotek.pupgui2 -y 
+}
+
+function FuncInstallProtonge() {            
     FuncDownloadAndExtractRepo "Proton" "GloriousEggroll/proton-ge-custom" ".tar.gz"
     local ProtonDownloadFolder="$(find "/home/$CurrentUser/Downloads/Proton/" -name "GE-Proton*")"
     local ProtonSteamFolder="/home/$CurrentUser/.steam/steam/compatibilitytools.d"
@@ -389,16 +419,21 @@ elif [ "${InstallOptions[0]//-/}" = "help" ]; then
             freetube\t      Installs the Freetube desktop app\n
             github\t\t      Installs the linux port of the Github Desktop app\n
             heroic\t\t      Installs the Heroic client\n
-            kodi\t\t        Installs the Kodi media software app\n
+            kodi\t\t        Installs the Kodi media server app\n
+            librewolf\t     Installs the Librewolf web browser\n
             lutris\t\t      Installs the Lutris client\n
             mangohud\t      Installs the MangoHUD gaming overlay\n
+            plex\t\t        Installs the Plex media server app\n
             protonge\t      Installs the latest Glorious Eggroll Proton release\n
             protonmail\t    Installs the ProtonMail linux client\n
             protonpass\t    Installs the ProtonPass linux client\n
+            protonupqt\t    Installs the ProtonUp-Qt compatibility tool\n
             protonvpn\t     Installs the ProtonVPN linux client\n
             signal\t\t      Installs the Signal client\n
             spotify\t       Installs the Spotify client\n
             steam\t\t       Installs the Steam client\n
+            thunderbird\t   Installs the Thunderbird mail client
+            timeshift\t     Installs the Timeshift app\n
             vlc\t\t         Installs the VLC media player\n
             vscode\t\t      Installs the Visual Studio Code text editor\n
             vscodium\t      Installs the telemetry-free version of Visual Studio Code\n
@@ -410,7 +445,7 @@ else
         ParsedInstallOptions+=("${Options//-/}")
     done
 
-    ValidPrograms=("Steam","Lutris","Heroic","Discord","Signal","Spotify","Mangohud","Protonge","Vscode","Emacs","Protonvpn","Protonmail","Protonpass","Flatseal","Brave","Vscodium","Boxes","Github","Freetube","Kodi","Vlc","Bottles")
+    ValidPrograms=("Steam","Lutris","Heroic","Discord","Signal","Spotify","Mangohud","Protonge","Vscode","Emacs","Protonvpn","Protonmail","Protonpass","Flatseal","Brave","Vscodium","Boxes","Github","Freetube","Kodi","Vlc","Bottles","Librewolf","Thunderbird","Timeshift","Plex","Protonupqt")
     for Options in "${ParsedInstallOptions[@]}"; do         #Check that passed parameters are valid, so they can safetly be used for function calls
         if ! [[ $(echo "${ValidPrograms[@]}" | grep -F -w "${Options^}") ]]; then     
             echo "Parameter '$Options' is not a valid install option; See 'help' for details"
