@@ -4,6 +4,7 @@
     # Add new install options:
         # neofetch
         # gThumb
+        # libreoffice
     # Test new install options: 
         # N/A
     # Add in a launch option to prioritize flatpaks, if available   
@@ -61,7 +62,6 @@ function FuncDownloadAndExtractRepo() {
     local URLStrings=`curl -s "${RepoLocation}" | grep "browser_download_url" | cut -d '"' -f 4`
     local URLArray=($URLStrings)
     local DesiredURL=''
-    echo $RepoLocation  
 
     for t in "${URLArray[@]}"; do   
         if [ "${t: -${#Filetype}}" == $Filetype ]; then     #Find desired file(s) from releases

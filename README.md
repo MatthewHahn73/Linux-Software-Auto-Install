@@ -89,7 +89,7 @@
         <li>Gaming Software</li>
         <ul>
             <li>lutris - Installs the Lutris client</li>
-            <li>mangohud - Installs the latest MangoHUD release from its repository</li>
+            <li>mangohud - Installs the MangoHud game overlay software</li>
             <li>steam - Installs the Steam client</li>
             <li>protonge - Installs the latest Glorious Eggroll Proton release from its repository</li>
             <li>protonupqt - Installs the ProtonUp-Qt compatibility tool</li> 
