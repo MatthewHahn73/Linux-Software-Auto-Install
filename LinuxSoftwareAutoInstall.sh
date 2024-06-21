@@ -1,27 +1,18 @@
 #!/bin/bash
 
 #TODO
-    # Look into a solution for validating existing installs
-        # Flatpaks can be checked with 'flatpak info "${appid}" >/dev/null 2>&1 && do_what_you_want_here'
-    # Now that the user issue is resolved, test mangohud hud install to ensure proper install 
     # Add new install options:
-        # N/A
+        # neofetch
+        # gThumb
     # Test new install options: 
-        # Falkon
-        # Evolution 
-        # Vim
-        # Dbeaver
-        # Telegram
-        # Skype
-        # Retroarch
-        # Gnome-Disks
-        # Disk Usage Analyzer 
+        # N/A
     # Add in a launch option to prioritize flatpaks, if available   
-        # Will need to update all functions with available flatpaks to install that instead if flag is enabled
+        # Will need to update all functions with available flatpaks to install that instead if that flag is enabled
     # Change the way the ValidPrograms variable reads in the list of valid programs
         # Read in from a file? 
     # Create a function to determine if a program is already installed, either from flatpak or a regular package manager
         # Return values?
+        # Flatpaks can be checked with 'flatpak info "${appid}" >/dev/null 2>&1 && do_what_you_want_here'
 
 #Bugs
     # There seems to be a conflict of some files between proton-pass-debug and vscodium-bin-debug on arch
@@ -70,6 +61,7 @@ function FuncDownloadAndExtractRepo() {
     local URLStrings=`curl -s "${RepoLocation}" | grep "browser_download_url" | cut -d '"' -f 4`
     local URLArray=($URLStrings)
     local DesiredURL=''
+    echo $RepoLocation  
 
     for t in "${URLArray[@]}"; do   
         if [ "${t: -${#Filetype}}" == $Filetype ]; then     #Find desired file(s) from releases
@@ -87,6 +79,13 @@ function FuncDownloadAndExtractRepo() {
         tar xzf $TarFileName -C $DownloadLocation
         rm $TarFileName
     fi 
+}
+
+function FuncEnableArchMultiRepo() {
+    mline=$(grep -n "\\[multilib\\]" /etc/pacman.conf | cut -d: -f1)
+    rline=$(($mline + 1))
+    sed -i ''$mline's|#\[multilib\]|\[multilib\]|g' /etc/pacman.conf
+    sed -i ''$rline's|#Include = /etc/pacman.d/mirrorlist|Include = /etc/pacman.d/mirrorlist|g' /etc/pacman.conf
 }
 
 function FuncUpdateSystemAndInstallRequired() {
@@ -153,7 +152,7 @@ function FuncInstallFalkon() {
     elif [ $CurrentPackageManager = "apt" ]; then 
         apt-get install falkon -y 
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S falkon --noconfirm
+        pacman -S falkon --noconfirm --needed
     fi 
 }
 
@@ -163,7 +162,7 @@ function FuncInstallThunderbird() {
     elif [ $CurrentPackageManager = "apt" ]; then 
         apt-get install thunderbird -y 
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S thunderbird --noconfirm
+        pacman -S thunderbird --noconfirm --needed
     fi 
 }
 
@@ -173,7 +172,7 @@ function FuncInstallEvolution() {
     elif [ $CurrentPackageManager = "apt" ]; then 
         apt-get install evolution -y 
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S evolution --noconfirm
+        pacman -S evolution --noconfirm --needed
     fi 
 }
 
@@ -202,7 +201,7 @@ function FuncInstallVscode() {
         rm -f packages.microsoft.gpg
         apt-get update && apt-get install code -y
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S code --noconfirm
+        pacman -S code --noconfirm --needed
     fi 
 }
 
@@ -230,7 +229,7 @@ function FuncInstallEmacs() {
     elif [ $CurrentPackageManager = "apt" ]; then 
         apt-get install emacs -y
     elif [ $CurrentPackageManager = "pacman" ]; then    
-        pacman -S emacs --noconfirm
+        pacman -S emacs --noconfirm --needed
     fi 
 }
 
@@ -240,7 +239,7 @@ function FuncInstallVim() {
     elif [ $CurrentPackageManager = "apt" ]; then 
         apt-get install vim -y
     elif [ $CurrentPackageManager = "pacman" ]; then    
-        pacman -S vim --noconfirm
+        pacman -S vim --noconfirm --needed
     fi 
 }
 
@@ -248,15 +247,15 @@ function FuncInstallDbeaver() {
     if [ $CurrentPackageManager = "dnf" ]; then 
         cd /home/$CurrentUser/Downloads
         wget -O dbeaver-desktop.rpm https://dbeaver.io/files/dbeaver-ce-latest-stable.x86_64.rpm
-        rpm -i dbeaver-desktop.rpm
-        rm dbeaver-desktop.rpm -y 
+        rpm -i dbeaver-desktop.rpm 
+        rm dbeaver-desktop.rpm 
     elif [ $CurrentPackageManager = "apt" ]; then 
         cd /home/$CurrentUser/Downloads
         wget -O dbeaver-desktop.deb https://dbeaver.io/files/dbeaver-ce_latest_amd64.deb
-        rpm -i dbeaver-desktop.deb
-        rm dbeaver-desktop.deb -y 
+        dpkg -i dbeaver-desktop.deb 
+        rm dbeaver-desktop.deb 
     elif [ $CurrentPackageManager = "pacman" ]; then    
-        pacman -S dbeaver --noconfirm
+        pacman -S dbeaver --noconfirm --needed
     fi 
 }
 
@@ -282,11 +281,11 @@ function FuncInstallBoxes() {
 
 function FuncInstallDisks() {
     if [ $CurrentPackageManager = "dnf" ]; then 
-        dnf install gnome-disks-utility -y 
+        dnf install gnome-disk-utility -y 
     elif [ $CurrentPackageManager = "apt" ]; then 
-        apt-get install gnome-disks-utility -y 
+        apt-get install gnome-disk-utility -y 
     elif [ $CurrentPackageManager = "pacman" ]; then    
-        pacman -S gnome-disks-utility --noconfirm
+        pacman -S gnome-disk-utility --noconfirm --needed
     fi 
 }
 
@@ -296,7 +295,7 @@ function FuncInstallDiskanalyzer() {
     elif [ $CurrentPackageManager = "apt" ]; then 
         apt-get install baobab -y 
     elif [ $CurrentPackageManager = "pacman" ]; then    
-        pacman -S baobab --noconfirm
+        pacman -S baobab --noconfirm --needed
     fi 
 }
 
@@ -362,7 +361,8 @@ function FuncInstallSteam() {
         apt install ./steam.deb -y
         rm steam.deb 
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        flatpak install flathub com.valvesoftware.Steam -y
+        FuncEnableArchMultiRepo
+        pacman -Sy steam --noconfirm --needed
     fi 
 }
 
@@ -388,7 +388,7 @@ function FuncInstallLutris() {
     elif [ $CurrentPackageManager = "apt" ]; then 
         apt-get install lutris -y
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S lutris --noconfirm
+        pacman -S lutris --noconfirm --needed
     fi 
 }
 
@@ -396,10 +396,10 @@ function FuncInstallRetroarch() {
     if [ $CurrentPackageManager = "dnf" ]; then 
         dnf install retroarch -y
     elif [ $CurrentPackageManager = "apt" ]; then 
-        add-apt-repository ppa:libretro/stable 
+        add-apt-repository ppa:libretro/stable -y 
         apt-get update && apt-get install retroarch -y
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S retroarch --noconfirm
+        pacman -S retroarch retroarch-assets-ozone retroarch-assets-xmb --noconfirm
     fi 
 }
 
@@ -411,17 +411,16 @@ function FuncInstallDiscord() {
         wget -O discord.deb "https://discord.com/api/download?platform=linux&format=deb"
         dpkg -i ./discord.deb -y
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S discord --noconfirm
+        pacman -S discord --noconfirm --needed
     fi 
 }
 
 function FuncInstallTelegram() {
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        dnf install telegram-desktop -y
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        apt-get install telegram-desktop -y 
-    elif [ $CurrentPackageManager = "pacman" ]; then 
+    if [ $CurrentPackageManager = "pacman" ]; then 
         pacman -S telegram-desktop --noconfirm
+    else    #Deb and RPM package rpos for telegram-desktop are abandonware apparently. Use the official website download
+        wget -O- https://telegram.org/dl/desktop/linux | tar xJ -C /opt/
+        ln -s /opt/Telegram/Telegram /usr/local/bin/telegram-desktop
     fi 
 }
 
@@ -440,16 +439,7 @@ function FuncInstallSignal() {
 }
 
 function FuncInstallSkype() {
-    if [ $CurrentPackageManager = "apt" ]; then 
-        curl -fsSL https://repo.skype.com/data/SKYPE-GPG-KEY \
-            | gpg --dearmor \
-            | tee /usr/share/keyrings/skype.gpg > /dev/null
-        echo deb [arch=amd64 signed-by=/usr/share/keyrings/skype.gpg] https://repo.skype.com/deb stable main \
-            | tee /etc/apt/sources.list.d/skype.list
-        apt-get update && apt-get install skypeforlinux -y 
-    else    #Skype only officially supported on apt package manager
-        flatpak install flathub com.skype.Client -y
-    fi 
+    flatpak install flathub com.skype.Client -y 
 }
 
 function FuncInstallSpotify() {
@@ -471,7 +461,7 @@ function FuncInstallVlc() {
     elif [ $CurrentPackageManager = "apt" ]; then 
         apt install vlc -y 
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S vlc --noconfirm
+        pacman -S vlc --noconfirm --needed
     fi 
 }
 
@@ -503,11 +493,15 @@ function FuncInstallProtonge() {
     cp -r $ProtonDownloadFolder $ProtonSteamFolder
 }
 
-function FuncInstallMangohud() {            
-    FuncDownloadAndExtractRepo "MangoHud" "flightlessmango/MangoHud" ".tar.gz"
-    local MangoHudFolder="/home/$CurrentUser/Downloads/MangoHud/MangoHud/"
-    cd $MangoHudFolder
-    ./mangohud-setup.sh install
+function FuncInstallMangohud() {       
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        dnf install mangohud -y
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        apt install mangohud -y
+    elif [ $CurrentPackageManager = "pacman" ]; then 
+        FuncEnableArchMultiRepo
+        pacman -Sy mangohud --noconfirm --needed
+    fi 
 }
 
 if [ "${#InstallOptions[@]}" -eq 0 ]; then 
@@ -555,7 +549,7 @@ elif [ "${InstallOptions[0]//-/}" = "help" ]; then
             spotify\t       Installs the Spotify client\n
             steam\t\t       Installs the Steam client\n
             telegram\t      Installs the Telegram messaging app\n
-            thunderbird\t   Installs the Thunderbird mail client
+            thunderbird\t   Installs the Thunderbird mail client\n
             timeshift\t     Installs the Timeshift app\n
             vim\t\t         Installs the terminal text editor vim\n
             vlc\t\t         Installs the VLC media player\n

@@ -58,7 +58,7 @@
         <li>Media</li>
         <ul>
             <li>freetube - Installs the Freetube desktop app</li>
-            <li>kodi - Installs the Kodi media software app</li>
+            <li>kodi - Installs the Kodi media server app</li>
             <li>vlc - Installs the VLC media player</li>
             <li>plex - Installs the Plex media server app</li>   
             <li>spotify - Installs the Spotify client</li>
