@@ -4,9 +4,6 @@
 <h3>Script Information</h3>
     <ul>
         <li>The script will install software from traditional package managers, using RPM or PPA repos when available</li>
-        <ul>
-            <li>To prioritize installing software as flatpaks, using the 'useflat' script parameter</li>
-        </ul>
         <li>The following software are required by the script and will be auto-installed if unavailable</li>
         <ul>
             <li>flatpak, wget, curl, gpg, git</li>
