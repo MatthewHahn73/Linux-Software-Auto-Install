@@ -2,15 +2,11 @@
 
 #TODO
     # Add new install options:
-        # neofetch
-        # gThumb
-        # libreoffice
+        # N/A
     # Test new install options: 
         # N/A
     # Add in a launch option to prioritize flatpaks, if available   
         # Will need to update all functions with available flatpaks to install that instead if that flag is enabled
-    # Change the way the ValidPrograms variable reads in the list of valid programs
-        # Read in from a file? 
     # Create a function to determine if a program is already installed, either from flatpak or a regular package manager
         # Return values?
         # Flatpaks can be checked with 'flatpak info "${appid}" >/dev/null 2>&1 && do_what_you_want_here'
@@ -54,6 +50,10 @@ case "$CurrentOSReadable" in                                            #Determi
         echo "Error - Unsupported OS:" $CurrentOSReadable
         exit 1
 esac
+
+function FuncDetermineExistingInstallation() {
+    echo "TODO"
+}
 
 function FuncDownloadAndExtractRepo() {         
     local DownloadLocation="/home/$CurrentUser/Downloads/$1"
@@ -173,6 +173,22 @@ function FuncInstallEvolution() {
         apt-get install evolution -y 
     elif [ $CurrentPackageManager = "pacman" ]; then 
         pacman -S evolution --noconfirm --needed
+    fi 
+}
+
+function FuncInstallProtonmail() { 
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        cd /home/$CurrentUser/Downloads
+        wget -O ProtonMail-desktop.rpm https://proton.me/download/mail/linux/ProtonMail-desktop-beta.rpm
+        rpm -i ProtonMail-desktop.rpm
+        rm ProtonMail-desktop.rpm
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        cd /home/$CurrentUser/Downloads
+        wget -O ProtonMail-desktop.deb https://proton.me/download/mail/linux/ProtonMail-desktop-beta.deb
+        dpkg -i ProtonMail-desktop.deb
+        rm ProtonMail-desktop.deb
+    elif [ $CurrentPackageManager = "pacman" ]; then 
+        yes | runuser -u $CurrentUser -- yay -S protonmail-desktop
     fi 
 }
 
@@ -299,6 +315,26 @@ function FuncInstallDiskanalyzer() {
     fi 
 }
 
+function FuncInstallGthumb() {
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        dnf install gthumb -y 
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        apt-get install gthumb -y 
+    elif [ $CurrentPackageManager = "pacman" ]; then    
+        pacman -S gthumb --noconfirm --needed
+    fi 
+}
+
+function FuncInstallNeofetch() {
+    if [ $CurrentPackageManager = "dnf" ]; then 
+        dnf install neofetch -y 
+    elif [ $CurrentPackageManager = "apt" ]; then 
+        apt-get install neofetch -y 
+    elif [ $CurrentPackageManager = "pacman" ]; then    
+        pacman -S neofetch --noconfirm --needed
+    fi 
+}
+
 function FuncInstallProtonvpn() {
     if [ $CurrentPackageManager = "dnf" ]; then 
         cd /home/$CurrentUser/Downloads
@@ -316,22 +352,6 @@ function FuncInstallProtonvpn() {
     elif [ $CurrentPackageManager = "pacman" ]; then 
         yes | runuser -u $CurrentUser -- yay -S python-proton-core python-proton-vpn-api-core python-proton-vpn-connection python-proton-keyring-linux python-proton-keyring-linux-secretservice python-proton-vpn-logger python-proton-vpn-network-manager python-proton-vpn-network-manager-openvpn python-proton-vpn-killswitch python-proton-vpn-killswitch-network-manager python-aiohttp python-bcrypt python-distro python-gnupg python-jinja python-requests python-pynacl python-pyopenssl python-sentry_sdk webkit2gtk dbus-python --noconfirm
         yes | runuser -u $CurrentUser -- yay -S proton-vpn-gtk-app
-    fi 
-}
-
-function FuncInstallProtonmail() { 
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        cd /home/$CurrentUser/Downloads
-        wget -O ProtonMail-desktop.rpm https://proton.me/download/mail/linux/ProtonMail-desktop-beta.rpm
-        rpm -i ProtonMail-desktop.rpm
-        rm ProtonMail-desktop.rpm
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        cd /home/$CurrentUser/Downloads
-        wget -O ProtonMail-desktop.deb https://proton.me/download/mail/linux/ProtonMail-desktop-beta.deb
-        dpkg -i ProtonMail-desktop.deb
-        rm ProtonMail-desktop.deb
-    elif [ $CurrentPackageManager = "pacman" ]; then 
-        yes | runuser -u $CurrentUser -- yay -S protonmail-desktop
     fi 
 }
 
@@ -399,7 +419,7 @@ function FuncInstallRetroarch() {
         add-apt-repository ppa:libretro/stable -y 
         apt-get update && apt-get install retroarch -y
     elif [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S retroarch retroarch-assets-ozone retroarch-assets-xmb --noconfirm
+        pacman -S retroarch retroarch-assets-ozone retroarch-assets-xmb --noconfirm --needed
     fi 
 }
 
@@ -504,66 +524,21 @@ function FuncInstallMangohud() {
     fi 
 }
 
-if [ "${#InstallOptions[@]}" -eq 0 ]; then 
+if [ "${#InstallOptions[@]}" -eq 0 ]; then                  #No arguments found
     echo "No arguments supplied; Use 'help' for details"
-elif [ "${InstallOptions[0]//-/}" = "help" ]; then 
-    Output="
-        $(basename $0)\n
-        Permission requirements: root\n\n
-        Supports:\n
-        RPM:\t\t       Fedora, CentOS, Nobara\n
-        DKPG:\t\t      Ubuntu, Lubuntu, Xubuntu, Kubuntu, Elementary, PopOS, Mint, Debian\n 
-        Pacman:\t      Arch, EndeavourOS, Manjaro\n
-        \n
-        Options:\n
-            quiet\t\t       Show less output in the console\n
-            help\t\t        Show available install options\n\n
-        Software:\n
-            bottles\t       Installs the wine software Bottles\n
-            boxes\t\t       Installs the Gnome-Boxes VM software\n
-            brave\t\t       Installs the Brave web browser\n
-            dbeaver\t       Installs the SQL editor\n
-            discord\t       Installs the Discord client\n
-            emacs\t\t       Installs the GNU Emacs text editor\n
-            evolution\t     Installs the Evolution mail client\n
-            falkon\t\t      Installs the Falkon web browser\n
-            flatseal\t      Installs Flatseal for managing Flatpak permissions\n
-            freetube\t      Installs the Freetube desktop app\n
-            github\t\t      Installs the linux port of the Github Desktop app\n
-            gnomedisks\t    Installs Gnome Disks utility for managing partitions\n
-            diskanalyzer\t  Installs Gnome Disk Analyzer utility for viewing system storage\n
-            heroic\t\t      Installs the Heroic client\n
-            kodi\t\t        Installs the Kodi media server app\n
-            librewolf\t     Installs the Librewolf web browser\n
-            lutris\t\t      Installs the Lutris client\n
-            mangohud\t      Installs the MangoHUD gaming overlay\n
-            plex\t\t        Installs the Plex media server app\n
-            protonge\t      Installs the latest Glorious Eggroll Proton release\n
-            protonmail\t    Installs the ProtonMail linux client\n
-            protonpass\t    Installs the ProtonPass linux client\n
-            protonupqt\t    Installs the ProtonUp-Qt compatibility tool\n
-            protonvpn\t     Installs the ProtonVPN linux client\n
-            retroarch\t     Installs the Retroarch emulator frontend\n
-            signal\t\t      Installs the Signal client\n
-            skype\t\t       Installs the Skype messaging app\n
-            spotify\t       Installs the Spotify client\n
-            steam\t\t       Installs the Steam client\n
-            telegram\t      Installs the Telegram messaging app\n
-            thunderbird\t   Installs the Thunderbird mail client\n
-            timeshift\t     Installs the Timeshift app\n
-            vim\t\t         Installs the terminal text editor vim\n
-            vlc\t\t         Installs the VLC media player\n
-            vscode\t\t      Installs the Visual Studio Code text editor\n
-            vscodium\t      Installs the telemetry-free version of Visual Studio Code\n
-        "
+elif [ "${InstallOptions[0]//-/}" = "help" ]; then          #Help was supplied
+    HelpFile=`(pwd)`/Assets/HelpOutput.txt
+    Output=$(cat "$HelpFile")
+    echo "$(basename $0)"
     echo -e $Output
-else 
+else                                                        #Run defaults
     ParsedInstallOptions=() 
     for Options in "${InstallOptions[@]}"; do               #Sanitize all '-' values from all parameters
         ParsedInstallOptions+=("${Options//-/}")
     done
 
-    ValidPrograms=("Steam","Lutris","Heroic","Discord","Signal","Spotify","Mangohud","Protonge","Vscode","Emacs","Protonvpn","Protonmail","Protonpass","Flatseal","Brave","Vscodium","Boxes","Github","Freetube","Kodi","Vlc","Bottles","Librewolf","Thunderbird","Timeshift","Plex","Protonupqt","Falkon","Evolution","Vim","Dbeaver","Telegram","Skype","Retroarch","Disks","Diskanalyzer")
+    ValidProgramsFile=`(pwd)`/Assets/ValidInstalls.json
+    ValidPrograms=($(awk -v RS= '{for (i=1; i<=NF; i++) {printf "%s ", $i}; print ""}' $ValidProgramsFile))
     for Options in "${ParsedInstallOptions[@]}"; do         #Check that passed parameters are valid, so they can safetly be used for function calls
         if ! [[ $(echo "${ValidPrograms[@]}" | grep -F -w "${Options^}") ]]; then     
             echo "Parameter '$Options' is not a valid install option; See 'help' for details"
@@ -577,7 +552,7 @@ else
     else 
         FuncUpdateSystemAndInstallRequired 
     fi 
-    for Options in "${ParsedInstallOptions[@]}"; do         #If we made it here, all looks good. Run desired installations
+    for Options in "${ParsedInstallOptions[@]}"; do         #Run desired installations
         echo "Installing $Options ... "
         if $Quiet; then 
             FuncInstall${Options^} >/dev/null

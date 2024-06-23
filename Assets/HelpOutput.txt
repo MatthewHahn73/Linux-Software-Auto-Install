@@ -1,0 +1,47 @@
+Permission requirements: root\n\n
+Supports:\n
+    RPM:\t\t       Fedora, CentOS, Nobara\n
+    DKPG:\t\t      Ubuntu, Lubuntu, Xubuntu, Kubuntu, Elementary, PopOS, Mint, Debian\n 
+    Pacman:\t      Arch, EndeavourOS, Manjaro\n\n
+Options:\n
+    quiet\t\t       Show less output in the console\n
+    help\t\t        Show available install options\n\n
+Software:\n
+    bottles\t       Installs the wine software Bottles\n
+    boxes\t\t       Installs the Gnome-Boxes VM software\n
+    brave\t\t       Installs the Brave web browser\n
+    dbeaver\t       Installs the SQL editor\n
+    discord\t       Installs the Discord client\n
+    diskanalyzer\t  Installs Gnome Disk Analyzer utility for viewing system storage\n
+    emacs\t\t       Installs the GNU Emacs text editor\n
+    evolution\t     Installs the Evolution mail client\n
+    falkon\t\t      Installs the Falkon web browser\n
+    flatseal\t      Installs Flatseal for managing Flatpak permissions\n
+    freetube\t      Installs the Freetube desktop app\n
+    github\t\t      Installs the linux port of the Github Desktop app\n
+    gnomedisks\t    Installs Gnome Disks utility for managing partitions\n
+    gthumb\t        Installs the image viewer software Gthumb\n
+    heroic\t\t      Installs the Heroic client\n
+    kodi\t\t        Installs the Kodi media server app\n
+    librewolf\t     Installs the Librewolf web browser\n
+    lutris\t\t      Installs the Lutris client\n
+    mangohud\t      Installs the MangoHUD gaming overlay\n
+    neofetch\t      Installs the Neofetch command line tool\n
+    plex\t\t        Installs the Plex media server app\n
+    protonge\t      Installs the latest Glorious Eggroll Proton release\n
+    protonmail\t    Installs the ProtonMail linux client\n
+    protonpass\t    Installs the ProtonPass linux client\n
+    protonupqt\t    Installs the ProtonUp-Qt compatibility tool\n
+    protonvpn\t     Installs the ProtonVPN linux client\n
+    retroarch\t     Installs the Retroarch emulator frontend\n
+    signal\t\t      Installs the Signal client\n
+    skype\t\t       Installs the Skype messaging app\n
+    spotify\t       Installs the Spotify client\n
+    steam\t\t       Installs the Steam client\n
+    telegram\t      Installs the Telegram messaging app\n
+    thunderbird\t   Installs the Thunderbird mail client\n
+    timeshift\t     Installs the Timeshift app\n
+    vim\t\t         Installs the terminal text editor vim\n
+    vlc\t\t         Installs the VLC media player\n
+    vscode\t\t      Installs the Visual Studio Code text editor\n
+    vscodium\t      Installs the telemetry-free version of Visual Studio Code\n

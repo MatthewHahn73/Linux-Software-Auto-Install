@@ -65,10 +65,12 @@
         </ul>
         <li>System</li>
         <ul>
-            <li>bottles - Installs the wine software Bottles</li>
+            <li>bottles - Installs the Windows compatibility software Bottles</li>
             <li>flatseal - Installs Flatseal for managing Flatpak permissions</li>
             <li>disks - Installs Gnome Disks utility for managing partitions</li>
             <li>diskanalyzer - Installs Gnome Disk Analyzer utility for viewing system storage</li>
+            <li>gthumb - Installs the image viewer software Gthumb</li>
+            <li>neofetch - Installs the Neofetch command line tool</li>
         </ul>
         <li>Utility</li>
         <ul>
