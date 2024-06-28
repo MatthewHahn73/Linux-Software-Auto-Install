@@ -5,12 +5,26 @@
         # N/A
     # Test new install options: 
         # N/A
-    # Add in a launch option to prioritize flatpaks, if available   
-        # Will need to update all functions with available flatpaks to install that instead if that flag is enabled
-    # Create a function to determine if a program is already installed, either from flatpak or a regular package manager
-        # Return values?
-        # Flatpaks can be checked with 'flatpak info "${appid}" >/dev/null 2>&1 && do_what_you_want_here'
-
+    # Test the flatpak only install option
+        # The following don't have flatpaks available: 
+            # Proton Mail (Bridge does, but not the beta client)
+            # Timeshift
+            # Gnome-Disk-Utility
+            # Neofetch 
+        # The following only have flatpaks available: 
+            # Flatseal
+            # Gnome-Boxes
+            # Skype 
+            # Kodi 
+            # Plex
+            # Freetube 
+            # Bottles
+            # ProtonUp-Qt
+        # The following only have support on the apt package manager and will install flatpaks otherwise: 
+            # Signal 
+            # Spotify
+    # Look into manual install options for the above listed software that only has flatpaks available
+    # Look into the quiet command blocking root password inputs in arch
 #Bugs
     # There seems to be a conflict of some files between proton-pass-debug and vscodium-bin-debug on arch
         # If one is installed, can't install the other 
@@ -23,23 +37,14 @@ CurrentOS=`grep '^NAME' /etc/os-release`
 CurrentOSReadable=`echo "$CurrentOS" | cut -d'"' -f 2`
 DownloadDir="/home/"$CurrentUser"/Downloads"
 Quiet=false
+UseFlatpaks=false
 
-if (( EUID != 0 )); then                                                #Determine if the script was run with the required root permissions
+if (( EUID != 0 )); then                                                    #Determine if the script was run with the required root permissions
     echo "'$(basename $0)' requires root permissions run" 1>&2
     exit 1
 fi
 
-if [[ $(echo "${InstallOptions[@]}" | grep -F -w "quiet") ]]; then      #Determine if the quiet option was passed, if it was, set the flag and remove it from the list
-    Quiet=true 
-    TempArray=()
-    for Option in "${InstallOptions[@]}"; do 
-        [[ $Option != "quiet" ]] && TempArray+=("$Option")
-    done
-    InstallOptions=("${TempArray[@]}")
-    unset TempArray
-fi 
-
-case "$CurrentOSReadable" in                                            #Determine the user's package manager by distro name
+case "$CurrentOSReadable" in                                                 #Determine the user's package manager by distro name
     *Fedora*|*CentOS*|*Nobara*) 
         CurrentPackageManager="dnf" ;;
     *Ubuntu*|*Lubuntu*|*Xubuntu*|*Kubuntu*|*Elementary*|*Pop*|*Mint*|*Debian*)
@@ -51,9 +56,25 @@ case "$CurrentOSReadable" in                                            #Determi
         exit 1
 esac
 
-function FuncDetermineExistingInstallation() {
-    echo "TODO"
-}
+if [[ $(echo "${InstallOptions[@]}" | grep -F -w "quiet") ]]; then          #Determine if the quiet option was passed, if it was, set the flag and remove it from the list
+    Quiet=true 
+    TempArray=()
+    for Option in "${InstallOptions[@]}"; do 
+        [[ $Option != "quiet" ]] && TempArray+=("$Option")
+    done
+    InstallOptions=("${TempArray[@]}")
+    unset TempArray
+fi 
+
+if [[ $(echo "${InstallOptions[@]}" | grep -F -w "useflat") ]]; then        #Determine if the useflat option was passed, if it was, set the flag and remove it from the list
+    Quiet=true 
+    TempArray=()
+    for Option in "${InstallOptions[@]}"; do 
+        [[ $Option != "useflat" ]] && TempArray+=("$Option")
+    done
+    InstallOptions=("${TempArray[@]}")
+    unset TempArray
+fi 
 
 function FuncDownloadAndExtractRepo() {         
     local DownloadLocation="/home/$CurrentUser/Downloads/$1"
@@ -116,63 +137,83 @@ function FuncInstallFlatseal() {
 }
 
 function FuncInstallBrave() {
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        dnf install dnf-plugins-core -y
-        dnf config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo -y
-        rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc 
-        dnf install brave-browser -y    
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg 
-        echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main"| tee /etc/apt/sources.list.d/brave-browser-release.list
-        apt-get update && apt-get install brave-browser -y 
-    elif [ $CurrentPackageManager = "pacman" ]; then 
-        yes | runuser -u $CurrentUser -- yay -S brave-bin
+    if $UseFlatpaks; then 
+        flatpak install flathub com.brave.Browser -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then 
+            dnf install dnf-plugins-core -y
+            dnf config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo -y
+            rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc 
+            dnf install brave-browser -y    
+        elif [ $CurrentPackageManager = "apt" ]; then 
+            curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg 
+            echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main"| tee /etc/apt/sources.list.d/brave-browser-release.list
+            apt-get update && apt-get install brave-browser -y 
+        elif [ $CurrentPackageManager = "pacman" ]; then 
+            yes | runuser -u $CurrentUser -- yay -S brave-bin
+        fi 
     fi 
 }
 
 function FuncInstallLibrewolf() {
-    if [ $CurrentPackageManager = "dnf" ]; then
-        curl -fsSL https://rpm.librewolf.net/librewolf-repo.repo | pkexec tee /etc/yum.repos.d/librewolf.repo 
-        dnf install librewolf -y 
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        distro=$(if echo " bullseye focal impish jammy uma una " \
-            | grep -q " $(lsb_release -sc) "; then echo $(lsb_release -sc); else echo focal; fi)
-        echo "deb [arch=amd64] http://deb.librewolf.net $distro main" \
-            | tee /etc/apt/sources.list.d/librewolf.list
-        wget https://deb.librewolf.net/keyring.gpg -O /etc/apt/trusted.gpg.d/librewolf.gpg
-        apt-get update && apt-get install librewolf -y
-    elif [ $CurrentPackageManager = "pacman" ]; then 
-        yes | runuser -u $CurrentUser -- yay -S librewolf-bin
+    if $UseFlatpaks; then 
+        flatpak install flathub io.gitlab.librewolf-community -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then
+            curl -fsSL https://rpm.librewolf.net/librewolf-repo.repo | pkexec tee /etc/yum.repos.d/librewolf.repo 
+            dnf install librewolf -y 
+        elif [ $CurrentPackageManager = "apt" ]; then 
+            distro=$(if echo " bullseye focal impish jammy uma una " \
+                | grep -q " $(lsb_release -sc) "; then echo $(lsb_release -sc); else echo focal; fi)
+            echo "deb [arch=amd64] http://deb.librewolf.net $distro main" \
+                | tee /etc/apt/sources.list.d/librewolf.list
+            wget https://deb.librewolf.net/keyring.gpg -O /etc/apt/trusted.gpg.d/librewolf.gpg
+            apt-get update && apt-get install librewolf -y
+        elif [ $CurrentPackageManager = "pacman" ]; then 
+            yes | runuser -u $CurrentUser -- yay -S librewolf-bin
+        fi 
     fi 
 }
 
 function FuncInstallFalkon() {
-    if [ $CurrentPackageManager = "dnf" ]; then
-        dnf install falkon -y 
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        apt-get install falkon -y 
-    elif [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S falkon --noconfirm --needed
+    if $UseFlatpaks; then 
+        flatpak install flathub org.kde.falkon -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then
+            dnf install falkon -y 
+        elif [ $CurrentPackageManager = "apt" ]; then 
+            apt-get install falkon -y 
+        elif [ $CurrentPackageManager = "pacman" ]; then 
+            pacman -S falkon --noconfirm --needed
+        fi 
     fi 
 }
 
 function FuncInstallThunderbird() { 
-    if [ $CurrentPackageManager = "dnf" ]; then
-        dnf install thunderbird -y 
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        apt-get install thunderbird -y 
-    elif [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S thunderbird --noconfirm --needed
+    if $UseFlatpaks; then 
+        flatpak install flathub org.mozilla.Thunderbird -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then
+            dnf install thunderbird -y 
+        elif [ $CurrentPackageManager = "apt" ]; then 
+            apt-get install thunderbird -y 
+        elif [ $CurrentPackageManager = "pacman" ]; then 
+            pacman -S thunderbird --noconfirm --needed
+        fi 
     fi 
 }
 
 function FuncInstallEvolution() {
-    if [ $CurrentPackageManager = "dnf" ]; then
-        dnf install evolution -y 
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        apt-get install evolution -y 
-    elif [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S evolution --noconfirm --needed
+    if $UseFlatpaks; then 
+        flatpak install flathub org.gnome.Evolution -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then
+            dnf install evolution -y 
+        elif [ $CurrentPackageManager = "apt" ]; then 
+            apt-get install evolution -y 
+        elif [ $CurrentPackageManager = "pacman" ]; then 
+            pacman -S evolution --noconfirm --needed
+        fi 
     fi 
 }
 
@@ -203,92 +244,116 @@ function FuncInstallTimeshift() {
 }
 
 function FuncInstallVscode() {
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        rpm --import https://packages.microsoft.com/keys/microsoft.asc 
-        echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" \
-            | tee /etc/yum.repos.d/vscode.repo > /dev/null
-        dnf check-update && dnf install code -y
-    elif [ $CurrentPackageManager = "apt" ]; then
-        wget -qO- https://packages.microsoft.com/keys/microsoft.asc \
-            | gpg --dearmor > packages.microsoft.gpg 
-        install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg 
-        echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" \
-            | tee /etc/apt/sources.list.d/vscode.list > /dev/null
-        rm -f packages.microsoft.gpg
-        apt-get update && apt-get install code -y
-    elif [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S code --noconfirm --needed
+    if $UseFlatpaks; then 
+        flatpak install flathub com.visualstudio.code -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then 
+            rpm --import https://packages.microsoft.com/keys/microsoft.asc 
+            echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" \
+                | tee /etc/yum.repos.d/vscode.repo > /dev/null
+            dnf check-update && dnf install code -y
+        elif [ $CurrentPackageManager = "apt" ]; then
+            wget -qO- https://packages.microsoft.com/keys/microsoft.asc \
+                | gpg --dearmor > packages.microsoft.gpg 
+            install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg 
+            echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" \
+                | tee /etc/apt/sources.list.d/vscode.list > /dev/null
+            rm -f packages.microsoft.gpg
+            apt-get update && apt-get install code -y
+        elif [ $CurrentPackageManager = "pacman" ]; then 
+            pacman -S code --noconfirm --needed
+        fi 
     fi 
 }
 
 function FuncInstallVscodium() { 
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        rpmkeys --import https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/-/raw/master/pub.gpg 
-        printf "[gitlab.com_paulcarroty_vscodium_repo]\nname=download.vscodium.com\nbaseurl=https://download.vscodium.com/rpms/\nenabled=1\ngpgcheck=1\nrepo_gpgcheck=1\ngpgkey=https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/-/raw/master/pub.gpg\nmetadata_expire=1h" \
-            | tee -a /etc/yum.repos.d/vscodium.repo
-        dnf install codium -y
-    elif [ $CurrentPackageManager = "apt" ]; then
-        wget -qO - https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/master/pub.gpg \
-            | gpg --dearmor \
-            | dd of=/usr/share/keyrings/vscodium-archive-keyring.gpg
-        echo 'deb [ signed-by=/usr/share/keyrings/vscodium-archive-keyring.gpg ] https://download.vscodium.com/debs vscodium main' \
-            | tee /etc/apt/sources.list.d/vscodium.list
-        apt-get update && apt-get install codium -y
-    elif [ $CurrentPackageManager = "pacman" ]; then 
-        yes | runuser -u $CurrentUser -- yay -S vscodium-bin
+    if $UseFlatpaks; then 
+        flatpak install flathub com.vscodium.codium -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then 
+            rpmkeys --import https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/-/raw/master/pub.gpg 
+            printf "[gitlab.com_paulcarroty_vscodium_repo]\nname=download.vscodium.com\nbaseurl=https://download.vscodium.com/rpms/\nenabled=1\ngpgcheck=1\nrepo_gpgcheck=1\ngpgkey=https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/-/raw/master/pub.gpg\nmetadata_expire=1h" \
+                | tee -a /etc/yum.repos.d/vscodium.repo
+            dnf install codium -y
+        elif [ $CurrentPackageManager = "apt" ]; then
+            wget -qO - https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/master/pub.gpg \
+                | gpg --dearmor \
+                | dd of=/usr/share/keyrings/vscodium-archive-keyring.gpg
+            echo 'deb [ signed-by=/usr/share/keyrings/vscodium-archive-keyring.gpg ] https://download.vscodium.com/debs vscodium main' \
+                | tee /etc/apt/sources.list.d/vscodium.list
+            apt-get update && apt-get install codium -y
+        elif [ $CurrentPackageManager = "pacman" ]; then 
+            yes | runuser -u $CurrentUser -- yay -S vscodium-bin
+        fi 
     fi 
 }
 
 function FuncInstallEmacs() { 
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        dnf install emacs -y
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        apt-get install emacs -y
-    elif [ $CurrentPackageManager = "pacman" ]; then    
-        pacman -S emacs --noconfirm --needed
+    if $UseFlatpaks; then 
+        flatpak install flathub org.gnu.emacs -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then 
+            dnf install emacs -y
+        elif [ $CurrentPackageManager = "apt" ]; then 
+            apt-get install emacs -y
+        elif [ $CurrentPackageManager = "pacman" ]; then    
+            pacman -S emacs --noconfirm --needed
+        fi 
     fi 
 }
 
 function FuncInstallVim() {
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        dnf install vim -y
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        apt-get install vim -y
-    elif [ $CurrentPackageManager = "pacman" ]; then    
-        pacman -S vim --noconfirm --needed
-    fi 
+    if $UseFlatpaks; then 
+        flatpak install flathub org.vim.Vim -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then 
+            dnf install vim -y
+        elif [ $CurrentPackageManager = "apt" ]; then 
+            apt-get install vim -y
+        elif [ $CurrentPackageManager = "pacman" ]; then    
+            pacman -S vim --noconfirm --needed
+        fi 
+    fi     
 }
 
 function FuncInstallDbeaver() {
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        cd /home/$CurrentUser/Downloads
-        wget -O dbeaver-desktop.rpm https://dbeaver.io/files/dbeaver-ce-latest-stable.x86_64.rpm
-        rpm -i dbeaver-desktop.rpm 
-        rm dbeaver-desktop.rpm 
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        cd /home/$CurrentUser/Downloads
-        wget -O dbeaver-desktop.deb https://dbeaver.io/files/dbeaver-ce_latest_amd64.deb
-        dpkg -i dbeaver-desktop.deb 
-        rm dbeaver-desktop.deb 
-    elif [ $CurrentPackageManager = "pacman" ]; then    
-        pacman -S dbeaver --noconfirm --needed
+    if $UseFlatpaks; then 
+        flatpak install flathub io.dbeaver.DBeaverCommunity -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then 
+            cd /home/$CurrentUser/Downloads
+            wget -O dbeaver-desktop.rpm https://dbeaver.io/files/dbeaver-ce-latest-stable.x86_64.rpm
+            rpm -i dbeaver-desktop.rpm 
+            rm dbeaver-desktop.rpm 
+        elif [ $CurrentPackageManager = "apt" ]; then 
+            cd /home/$CurrentUser/Downloads
+            wget -O dbeaver-desktop.deb https://dbeaver.io/files/dbeaver-ce_latest_amd64.deb
+            dpkg -i dbeaver-desktop.deb 
+            rm dbeaver-desktop.deb 
+        elif [ $CurrentPackageManager = "pacman" ]; then    
+            pacman -S dbeaver --noconfirm --needed
+        fi 
     fi 
 }
 
 function FuncInstallGithub() {
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        rpm --import https://rpm.packages.shiftkey.dev/gpg.key
-        sh -c 'echo -e "[shiftkey-packages]\nname=GitHub Desktop\nbaseurl=https://rpm.packages.shiftkey.dev/rpm/\nenabled=1\ngpgcheck=1\nrepo_gpgcheck=1\ngpgkey=https://rpm.packages.shiftkey.dev/gpg.key" > /etc/yum.repos.d/shiftkey-packages.repo'    
-        dnf install github-desktop -y
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        wget -qO - https://mirror.mwt.me/shiftkey-desktop/gpgkey \
-            | gpg --dearmor \
-            | tee /usr/share/keyrings/mwt-desktop.gpg > /dev/null
-        sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/mwt-desktop.gpg] https://mirror.mwt.me/shiftkey-desktop/deb/ any main" > /etc/apt/sources.list.d/mwt-desktop.list'    
-        apt-get update && apt-get install github-desktop -y
-    elif [ $CurrentPackageManager = "pacman" ]; then  
-        yes | runuser -u $CurrentUser -- yay -S github-desktop-bin
-    fi 
+    if $UseFlatpaks; then 
+        flatpak install flathub io.github.shiftey.Desktop -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then 
+            rpm --import https://rpm.packages.shiftkey.dev/gpg.key
+            sh -c 'echo -e "[shiftkey-packages]\nname=GitHub Desktop\nbaseurl=https://rpm.packages.shiftkey.dev/rpm/\nenabled=1\ngpgcheck=1\nrepo_gpgcheck=1\ngpgkey=https://rpm.packages.shiftkey.dev/gpg.key" > /etc/yum.repos.d/shiftkey-packages.repo'    
+            dnf install github-desktop -y
+        elif [ $CurrentPackageManager = "apt" ]; then 
+            wget -qO - https://mirror.mwt.me/shiftkey-desktop/gpgkey \
+                | gpg --dearmor \
+                | tee /usr/share/keyrings/mwt-desktop.gpg > /dev/null
+            sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/mwt-desktop.gpg] https://mirror.mwt.me/shiftkey-desktop/deb/ any main" > /etc/apt/sources.list.d/mwt-desktop.list'    
+            apt-get update && apt-get install github-desktop -y
+        elif [ $CurrentPackageManager = "pacman" ]; then  
+            yes | runuser -u $CurrentUser -- yay -S github-desktop-bin
+        fi 
+    fi     
 }
 
 function FuncInstallBoxes() { 
@@ -306,23 +371,31 @@ function FuncInstallDisks() {
 }
 
 function FuncInstallDiskanalyzer() {
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        dnf install baobab -y 
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        apt-get install baobab -y 
-    elif [ $CurrentPackageManager = "pacman" ]; then    
-        pacman -S baobab --noconfirm --needed
+    if $UseFlatpaks; then 
+        flatpak install flathub org.gnome.baobab -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then 
+            dnf install baobab -y 
+        elif [ $CurrentPackageManager = "apt" ]; then 
+            apt-get install baobab -y 
+        elif [ $CurrentPackageManager = "pacman" ]; then    
+            pacman -S baobab --noconfirm --needed
+        fi 
     fi 
 }
 
 function FuncInstallGthumb() {
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        dnf install gthumb -y 
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        apt-get install gthumb -y 
-    elif [ $CurrentPackageManager = "pacman" ]; then    
-        pacman -S gthumb --noconfirm --needed
-    fi 
+    if $UseFlatpaks; then 
+        flatpak install flathub org.gnome.gThumb -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then 
+            dnf install gthumb -y 
+        elif [ $CurrentPackageManager = "apt" ]; then 
+            apt-get install gthumb -y 
+        elif [ $CurrentPackageManager = "pacman" ]; then    
+            pacman -S gthumb --noconfirm --needed
+        fi 
+    fi     
 }
 
 function FuncInstallNeofetch() {
@@ -336,116 +409,152 @@ function FuncInstallNeofetch() {
 }
 
 function FuncInstallProtonvpn() {
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        cd /home/$CurrentUser/Downloads
-        wget -O protonvpn-stable-release.rpm "https://repo.protonvpn.com/fedora-$(cat /etc/fedora-release \
-            | cut -d\  -f 3)-stable/protonvpn-stable-release/protonvpn-stable-release-1.0.1-2.noarch.rpm"
-        dnf install ./protonvpn-stable-release.rpm -y
-        dnf check-update && dnf install proton-vpn-gnome-desktop -y 
-        rm protonvpn-stable-release.rpm
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        cd /home/$CurrentUser/Downloads
-        wget -O protonvpn-stable-release.deb https://repo.protonvpn.com/debian/dists/stable/main/binary-all/protonvpn-stable-release_1.0.3-3_all.deb 
-        dpkg -i ./protonvpn-stable-release.deb
-        apt-get update && apt-get install proton-vpn-gnome-desktop -y
-        rm protonvpn-stable-release.deb
-    elif [ $CurrentPackageManager = "pacman" ]; then 
-        yes | runuser -u $CurrentUser -- yay -S python-proton-core python-proton-vpn-api-core python-proton-vpn-connection python-proton-keyring-linux python-proton-keyring-linux-secretservice python-proton-vpn-logger python-proton-vpn-network-manager python-proton-vpn-network-manager-openvpn python-proton-vpn-killswitch python-proton-vpn-killswitch-network-manager python-aiohttp python-bcrypt python-distro python-gnupg python-jinja python-requests python-pynacl python-pyopenssl python-sentry_sdk webkit2gtk dbus-python --noconfirm
-        yes | runuser -u $CurrentUser -- yay -S proton-vpn-gtk-app
+    if $UseFlatpaks; then 
+        flatpak install flathub com.protonvpn.www -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then 
+            cd /home/$CurrentUser/Downloads
+            wget -O protonvpn-stable-release.rpm "https://repo.protonvpn.com/fedora-$(cat /etc/fedora-release \
+                | cut -d\  -f 3)-stable/protonvpn-stable-release/protonvpn-stable-release-1.0.1-2.noarch.rpm"
+            dnf install ./protonvpn-stable-release.rpm -y
+            dnf check-update && dnf install proton-vpn-gnome-desktop -y 
+            rm protonvpn-stable-release.rpm
+        elif [ $CurrentPackageManager = "apt" ]; then 
+            cd /home/$CurrentUser/Downloads
+            wget -O protonvpn-stable-release.deb https://repo.protonvpn.com/debian/dists/stable/main/binary-all/protonvpn-stable-release_1.0.3-3_all.deb 
+            dpkg -i ./protonvpn-stable-release.deb
+            apt-get update && apt-get install proton-vpn-gnome-desktop -y
+            rm protonvpn-stable-release.deb
+        elif [ $CurrentPackageManager = "pacman" ]; then 
+            yes | runuser -u $CurrentUser -- yay -S python-proton-core python-proton-vpn-api-core python-proton-vpn-connection python-proton-keyring-linux python-proton-keyring-linux-secretservice python-proton-vpn-logger python-proton-vpn-network-manager python-proton-vpn-network-manager-openvpn python-proton-vpn-killswitch python-proton-vpn-killswitch-network-manager python-aiohttp python-bcrypt python-distro python-gnupg python-jinja python-requests python-pynacl python-pyopenssl python-sentry_sdk webkit2gtk dbus-python --noconfirm
+            yes | runuser -u $CurrentUser -- yay -S proton-vpn-gtk-app
+        fi 
     fi 
 }
 
 function FuncInstallProtonpass() {
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        cd /home/$CurrentUser/Downloads
-        wget -O ProtonPass-desktop.rpm https://proton.me/download/PassDesktop/linux/x64/ProtonPass.rpm
-        rpm -i ProtonPass-desktop.rpm
-        rm ProtonPass-desktop.rpm
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        cd /home/$CurrentUser/Downloads
-        wget -O ProtonPass-desktop.deb https://proton.me/download/PassDesktop/linux/x64/ProtonPass.deb
-        dpkg -i ProtonPass-desktop.deb
-        rm ProtonPass-desktop.deb
-    elif [ $CurrentPackageManager = "pacman" ]; then
-        yes | runuser -u $CurrentUser -- yay -S proton-pass
+    if $UseFlatpaks; then 
+        flatpak install flathub me.proton.Pass -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then 
+            cd /home/$CurrentUser/Downloads
+            wget -O ProtonPass-desktop.rpm https://proton.me/download/PassDesktop/linux/x64/ProtonPass.rpm
+            rpm -i ProtonPass-desktop.rpm
+            rm ProtonPass-desktop.rpm
+        elif [ $CurrentPackageManager = "apt" ]; then 
+            cd /home/$CurrentUser/Downloads
+            wget -O ProtonPass-desktop.deb https://proton.me/download/PassDesktop/linux/x64/ProtonPass.deb
+            dpkg -i ProtonPass-desktop.deb
+            rm ProtonPass-desktop.deb
+        elif [ $CurrentPackageManager = "pacman" ]; then
+            yes | runuser -u $CurrentUser -- yay -S proton-pass
+        fi 
     fi 
 }
 
 function FuncInstallSteam() {
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        dnf install https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
-        dnf install steam -y
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        cd /home/$CurrentUser/Downloads
-        wget -O steam.deb https://cdn.akamai.steamstatic.com/client/installer/steam.deb
-        apt install ./steam.deb -y
-        rm steam.deb 
-    elif [ $CurrentPackageManager = "pacman" ]; then 
-        FuncEnableArchMultiRepo
-        pacman -Sy steam --noconfirm --needed
-    fi 
+    if $UseFlatpaks; then 
+        flatpak install flathub com.valvesoftware.Steam -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then 
+            dnf install https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
+            dnf install steam -y
+        elif [ $CurrentPackageManager = "apt" ]; then 
+            cd /home/$CurrentUser/Downloads
+            wget -O steam.deb https://cdn.akamai.steamstatic.com/client/installer/steam.deb
+            apt install ./steam.deb -y
+            rm steam.deb 
+        elif [ $CurrentPackageManager = "pacman" ]; then 
+            FuncEnableArchMultiRepo
+            pacman -Sy steam --noconfirm --needed
+        fi 
+    fi     
 }
 
 function FuncInstallHeroic() {
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        FuncDownloadAndExtractRepo "Heroic" "Heroic-Games-Launcher/HeroicGamesLauncher" ".rpm"
-        local HeroicRpmFile=`basename "$(find $DownloadDir/Heroic -name "heroic-*.x86_64.rpm")"`
-        cd $DownloadDir/Heroic
-        dnf install ./$HeroicRpmFile -y
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        FuncDownloadAndExtractRepo "Heroic" "Heroic-Games-Launcher/HeroicGamesLauncher" ".deb"
-        local HeroicDebFile=`basename "$(find $DownloadDir/Heroic -name "heroic_*_amd64.deb")"`
-        cd $DownloadDir/Heroic
-        dpkg -i $HeroicDebFile
-    elif [ $CurrentPackageManager = "pacman" ]; then 
-        yes | runuser -u $CurrentUser -- yay -S heroic-games-launcher
-    fi 
+    if $UseFlatpaks; then 
+        flatpak install flathub com.heroicgameslauncher.hgl -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then 
+            FuncDownloadAndExtractRepo "Heroic" "Heroic-Games-Launcher/HeroicGamesLauncher" ".rpm"
+            local HeroicRpmFile=`basename "$(find $DownloadDir/Heroic -name "heroic-*.x86_64.rpm")"`
+            cd $DownloadDir/Heroic
+            dnf install ./$HeroicRpmFile -y
+        elif [ $CurrentPackageManager = "apt" ]; then 
+            FuncDownloadAndExtractRepo "Heroic" "Heroic-Games-Launcher/HeroicGamesLauncher" ".deb"
+            local HeroicDebFile=`basename "$(find $DownloadDir/Heroic -name "heroic_*_amd64.deb")"`
+            cd $DownloadDir/Heroic
+            dpkg -i $HeroicDebFile
+        elif [ $CurrentPackageManager = "pacman" ]; then 
+            yes | runuser -u $CurrentUser -- yay -S heroic-games-launcher
+        fi 
+    fi     
 }
 
 function FuncInstallLutris() {
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        dnf install lutris -y
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        apt-get install lutris -y
-    elif [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S lutris --noconfirm --needed
-    fi 
+    if $UseFlatpaks; then 
+        flatpak install flathub net.lutris.Lutris -y 
+    else    
+        if [ $CurrentPackageManager = "dnf" ]; then 
+            dnf install lutris -y
+        elif [ $CurrentPackageManager = "apt" ]; then 
+            apt-get install lutris -y
+        elif [ $CurrentPackageManager = "pacman" ]; then 
+            pacman -S lutris --noconfirm --needed
+        fi 
+    fi    
 }
 
 function FuncInstallRetroarch() {
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        dnf install retroarch -y
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        add-apt-repository ppa:libretro/stable -y 
-        apt-get update && apt-get install retroarch -y
-    elif [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S retroarch retroarch-assets-ozone retroarch-assets-xmb --noconfirm --needed
-    fi 
+    if $UseFlatpaks; then 
+        flatpak install flathub org.libretro.RetroArch -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then 
+            dnf install retroarch -y
+        elif [ $CurrentPackageManager = "apt" ]; then 
+            add-apt-repository ppa:libretro/stable -y 
+            apt-get update && apt-get install retroarch -y
+        elif [ $CurrentPackageManager = "pacman" ]; then 
+            pacman -S retroarch retroarch-assets-ozone retroarch-assets-xmb --noconfirm --needed
+        fi 
+    fi     
 }
 
 function FuncInstallDiscord() {
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        dnf install https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
-        dnf install discord -y
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        wget -O discord.deb "https://discord.com/api/download?platform=linux&format=deb"
-        dpkg -i ./discord.deb -y
-    elif [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S discord --noconfirm --needed
-    fi 
+    if $UseFlatpaks; then 
+        flatpak install flathub org.libretro.RetroArch -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then 
+            dnf install https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
+            dnf install discord -y
+        elif [ $CurrentPackageManager = "apt" ]; then 
+            wget -O discord.deb "https://discord.com/api/download?platform=linux&format=deb"
+            dpkg -i ./discord.deb -y
+        elif [ $CurrentPackageManager = "pacman" ]; then 
+            pacman -S discord --noconfirm --needed
+        fi 
+    fi     
 }
 
 function FuncInstallTelegram() {
-    if [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S telegram-desktop --noconfirm
-    else    #Deb and RPM package rpos for telegram-desktop are abandonware apparently. Use the official website download
-        wget -O- https://telegram.org/dl/desktop/linux | tar xJ -C /opt/
-        ln -s /opt/Telegram/Telegram /usr/local/bin/telegram-desktop
-    fi 
+    if $UseFlatpaks; then 
+        flatpak install flathub org.telegram.desktop -y 
+    else 
+        if [ $CurrentPackageManager = "pacman" ]; then 
+            pacman -S telegram-desktop --noconfirm
+        else    #Deb and RPM packages for telegram-desktop are abandonware apparently. Use the official website download
+            wget -O- https://telegram.org/dl/desktop/linux | tar xJ -C /opt/
+            ln -s /opt/Telegram/Telegram /usr/local/bin/telegram-desktop
+        fi 
+    fi     
+}
+
+function FuncInstallSkype() {
+    flatpak install flathub com.skype.Client -y 
 }
 
 function FuncInstallSignal() {
-    if [ $CurrentPackageManager = "apt" ]; then 
+    if [ $CurrentPackageManager = "apt" ] && ! $UseFlatpaks; then 
         wget -O- https://updates.signal.org/desktop/apt/keys.asc \
             | gpg --dearmor > signal-desktop-keyring.gpg
         cat signal-desktop-keyring.gpg \
@@ -458,12 +567,8 @@ function FuncInstallSignal() {
     fi 
 }
 
-function FuncInstallSkype() {
-    flatpak install flathub com.skype.Client -y 
-}
-
 function FuncInstallSpotify() {
-    if [ $CurrentPackageManager = "apt" ]; then 
+    if [ $CurrentPackageManager = "apt" ] && ! $UseFlatpaks; then 
         curl -sS https://download.spotify.com/debian/pubkey_6224F9941A8AA6D1.gpg \
             | gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg
         echo "deb http://repository.spotify.com stable non-free" \
@@ -475,13 +580,17 @@ function FuncInstallSpotify() {
 }
 
 function FuncInstallVlc() {
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm -y 
-        dnf install vlc -y 
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        apt install vlc -y 
-    elif [ $CurrentPackageManager = "pacman" ]; then 
-        pacman -S vlc --noconfirm --needed
+    if $UseFlatpaks; then 
+        flatpak install flathub org.videolan.VLC -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then 
+            dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm -y 
+            dnf install vlc -y 
+        elif [ $CurrentPackageManager = "apt" ]; then 
+            apt install vlc -y 
+        elif [ $CurrentPackageManager = "pacman" ]; then 
+            pacman -S vlc --noconfirm --needed
+        fi 
     fi 
 }
 
@@ -513,15 +622,19 @@ function FuncInstallProtonge() {
     cp -r $ProtonDownloadFolder $ProtonSteamFolder
 }
 
-function FuncInstallMangohud() {       
-    if [ $CurrentPackageManager = "dnf" ]; then 
-        dnf install mangohud -y
-    elif [ $CurrentPackageManager = "apt" ]; then 
-        apt install mangohud -y
-    elif [ $CurrentPackageManager = "pacman" ]; then 
-        FuncEnableArchMultiRepo
-        pacman -Sy mangohud --noconfirm --needed
-    fi 
+function FuncInstallMangohud() {
+    if $UseFlatpaks; then 
+        flatpak install org.freedesktop.Platform.VulkanLayer.MangoHud -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then 
+            dnf install mangohud -y
+        elif [ $CurrentPackageManager = "apt" ]; then 
+            apt install mangohud -y
+        elif [ $CurrentPackageManager = "pacman" ]; then 
+            FuncEnableArchMultiRepo
+            pacman -Sy mangohud --noconfirm --needed
+        fi 
+    fi     
 }
 
 if [ "${#InstallOptions[@]}" -eq 0 ]; then                  #No arguments found

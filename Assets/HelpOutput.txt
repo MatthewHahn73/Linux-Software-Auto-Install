@@ -4,8 +4,9 @@ Supports:\n
     DKPG:\t\t      Ubuntu, Lubuntu, Xubuntu, Kubuntu, Elementary, PopOS, Mint, Debian\n 
     Pacman:\t      Arch, EndeavourOS, Manjaro\n\n
 Options:\n
+    help\t\t        Show available install options\n
     quiet\t\t       Show less output in the console\n
-    help\t\t        Show available install options\n\n
+    useflat\t       Prioritizes flatpaks, if available\n\n
 Software:\n
     bottles\t       Installs the wine software Bottles\n
     boxes\t\t       Installs the Gnome-Boxes VM software\n
@@ -41,7 +42,7 @@ Software:\n
     telegram\t      Installs the Telegram messaging app\n
     thunderbird\t   Installs the Thunderbird mail client\n
     timeshift\t     Installs the Timeshift app\n
-    vim\t\t         Installs the terminal text editor vim\n
+    vim\t\t         Installs the terminal text editor Vim\n
     vlc\t\t         Installs the VLC media player\n
     vscode\t\t      Installs the Visual Studio Code text editor\n
     vscodium\t      Installs the telemetry-free version of Visual Studio Code\n

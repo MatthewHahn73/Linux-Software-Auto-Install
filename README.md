@@ -4,6 +4,9 @@
 <h3>Script Information</h3>
     <ul>
         <li>The script will install software from traditional package managers, using RPM or PPA repos when available</li>
+            <ul>
+                <li>The 'useflat' parameter can be passed to prioritize flatpaks, if they are available</li>
+            </ul>
         <li>The following software are required by the script and will be auto-installed if unavailable</li>
         <ul>
             <li>flatpak, wget, curl, gpg, git</li>
@@ -29,6 +32,7 @@
     <ul>
         <li>help - Show available install options</li>
         <li>quiet - Show less output in the console</li>
+        <li>useflat - Prioritizes flatpaks, if available</li>
     </ul>
 
 <h1>Available Installs</h1>
