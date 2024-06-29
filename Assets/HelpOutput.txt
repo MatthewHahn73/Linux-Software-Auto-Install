@@ -1,8 +1,8 @@
 Permission requirements: root\n\n
 Supports:\n
-    RPM:\t\t       Fedora, CentOS, Nobara\n
-    DKPG:\t\t      Ubuntu, Lubuntu, Xubuntu, Kubuntu, Elementary, PopOS, Mint, Debian\n 
-    Pacman:\t      Arch, EndeavourOS, Manjaro\n\n
+    RPM:\t\t        Fedora, CentOS, Nobara\n
+    DKPG:\t\t       Ubuntu, Lubuntu, Xubuntu, Kubuntu, Elementary, PopOS, Mint, Debian\n 
+    Pacman:\t       Arch, EndeavourOS, Manjaro\n\n
 Options:\n
     help\t\t        Show available install options\n
     quiet\t\t       Show less output in the console\n

@@ -1,35 +1,39 @@
 #!/bin/bash
 
+#Notes
+    # The following don't have flatpaks available: 
+        # Proton Mail (Bridge does, but not the beta client)
+        # Timeshift
+        # Gnome-Disk-Utility
+        # Neofetch 
+    # The following only have flatpaks available: 
+        # Flatseal
+        # Gnome-Boxes
+        # Skype 
+        # Kodi 
+        # Plex
+        # Freetube 
+        # Bottles
+        # ProtonUp-Qt
+    # The following only have support on the apt package manager and will install flatpaks otherwise: 
+        # Signal 
+        # Spotify
 #TODO
     # Add new install options:
         # N/A
     # Test new install options: 
         # N/A
-    # Test the flatpak only install option
-        # The following don't have flatpaks available: 
-            # Proton Mail (Bridge does, but not the beta client)
-            # Timeshift
-            # Gnome-Disk-Utility
-            # Neofetch 
-        # The following only have flatpaks available: 
-            # Flatseal
-            # Gnome-Boxes
-            # Skype 
-            # Kodi 
-            # Plex
-            # Freetube 
-            # Bottles
-            # ProtonUp-Qt
-        # The following only have support on the apt package manager and will install flatpaks otherwise: 
-            # Signal 
-            # Spotify
     # Look into manual install options for the above listed software that only has flatpaks available
     # Look into the quiet command blocking root password inputs in arch
+    # Look into a bypass of the password prompt on yay install for arch
 #Bugs
     # There seems to be a conflict of some files between proton-pass-debug and vscodium-bin-debug on arch
         # If one is installed, can't install the other 
         # Issue persists, even after an uninstall of the problem program
             # Caching issue?
+    # There is an error thrown related to the closing bracket of the for loop on 669 (Execution of desired install functions)
+        # Seems to occur when an install fails to do an existing install (Other errors too?)
+            # Replicable on arch, and other OS's using pacman. Other package managers unknown
 
 InstallOptions=("$@")
 CurrentUser=`echo $SUDO_USER`
@@ -39,7 +43,7 @@ DownloadDir="/home/"$CurrentUser"/Downloads"
 Quiet=false
 UseFlatpaks=false
 
-if (( EUID != 0 )); then                                                    #Determine if the script was run with the required root permissions
+if (( EUID != 0 )); then                                                     #Determine if the script was run with the required root permissions
     echo "'$(basename $0)' requires root permissions run" 1>&2
     exit 1
 fi
@@ -56,7 +60,7 @@ case "$CurrentOSReadable" in                                                 #De
         exit 1
 esac
 
-if [[ $(echo "${InstallOptions[@]}" | grep -F -w "quiet") ]]; then          #Determine if the quiet option was passed, if it was, set the flag and remove it from the list
+if [[ $(echo "${InstallOptions[@]}" | grep -F -w "quiet") ]]; then           #Determine if the quiet option was passed, if it was, set the flag and remove it from the list
     Quiet=true 
     TempArray=()
     for Option in "${InstallOptions[@]}"; do 
@@ -66,8 +70,8 @@ if [[ $(echo "${InstallOptions[@]}" | grep -F -w "quiet") ]]; then          #Det
     unset TempArray
 fi 
 
-if [[ $(echo "${InstallOptions[@]}" | grep -F -w "useflat") ]]; then        #Determine if the useflat option was passed, if it was, set the flag and remove it from the list
-    Quiet=true 
+if [[ $(echo "${InstallOptions[@]}" | grep -F -w "useflat") ]]; then         #Determine if the useflat option was passed, if it was, set the flag and remove it from the list
+    UseFlatpaks=true 
     TempArray=()
     for Option in "${InstallOptions[@]}"; do 
         [[ $Option != "useflat" ]] && TempArray+=("$Option")
@@ -522,7 +526,7 @@ function FuncInstallRetroarch() {
 
 function FuncInstallDiscord() {
     if $UseFlatpaks; then 
-        flatpak install flathub org.libretro.RetroArch -y 
+        flatpak install flathub com.discordapp.Discord -y 
     else 
         if [ $CurrentPackageManager = "dnf" ]; then 
             dnf install https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
