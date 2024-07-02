@@ -22,7 +22,7 @@
     # Add new install options:
         # N/A
     # Test new install options: 
-        # N/A
+        # Libreoffice
     # Look into manual install options for the above listed software that only has flatpaks available
     # Look into the quiet command blocking root password inputs in arch
     # Look into a bypass of the password prompt on yay install for arch
@@ -637,6 +637,20 @@ function FuncInstallMangohud() {
         elif [ $CurrentPackageManager = "pacman" ]; then 
             FuncEnableArchMultiRepo
             pacman -Sy mangohud --noconfirm --needed
+        fi 
+    fi     
+}
+
+function FuncInstallLibreoffice() {
+    if $UseFlatpaks; then 
+        flatpak install flathub org.libreoffice.LibreOffice -y 
+    else 
+        if [ $CurrentPackageManager = "dnf" ]; then 
+            dnf install libreoffice-core libreoffice-writer libreoffice-calc libreoffice-impress libreoffice-draw libreoffice-math libreoffice-base -y 
+        elif [ $CurrentPackageManager = "apt" ]; then 
+            apt install libreoffice-core libreoffice-writer libreoffice-calc libreoffice-impress libreoffice-draw libreoffice-math libreoffice-base -y 
+        elif [ $CurrentPackageManager = "pacman" ]; then 
+            pacman -Sy libreoffice-still --noconfirm --needed
         fi 
     fi     
 }

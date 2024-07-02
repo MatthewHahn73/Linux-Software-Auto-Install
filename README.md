@@ -64,6 +64,10 @@
             <li>plex - Installs the Plex media server app</li>   
             <li>spotify - Installs the Spotify client</li>
         </ul>
+        <li>Productivity</li>
+        <ul>
+            <li>libreoffice - Installs the entire Libreoffice software suite</li>
+        </ul>
         <li>System</li>
         <ul>
             <li>bottles - Installs the Windows compatibility software Bottles</li>

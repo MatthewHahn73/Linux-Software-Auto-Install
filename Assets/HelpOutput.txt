@@ -21,9 +21,10 @@ Software:\n
     freetube\t      Installs the Freetube desktop app\n
     github\t\t      Installs the linux port of the Github Desktop app\n
     gnomedisks\t    Installs Gnome Disks utility for managing partitions\n
-    gthumb\t        Installs the image viewer software Gthumb\n
+    gthumb\t\t      Installs the image viewer software Gthumb\n
     heroic\t\t      Installs the Heroic client\n
     kodi\t\t        Installs the Kodi media server app\n
+    libreoffice\t   Installs the entire Libreoffice software suite\n
     librewolf\t     Installs the Librewolf web browser\n
     lutris\t\t      Installs the Lutris client\n
     mangohud\t      Installs the MangoHUD gaming overlay\n
