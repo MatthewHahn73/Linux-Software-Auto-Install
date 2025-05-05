@@ -91,6 +91,7 @@
             <li>gthumb - Installs the image viewer software Gthumb</li>
             <li>neofetch - Installs the Neofetch command line tool</li>
             <li>fastfetch - Installs the Fastfetch command line tool</li>
+            <li>mission - Installs the Mission Center resource monitoring tool</li>
         </ul>
         <li>Utility</li>
         <ul>
