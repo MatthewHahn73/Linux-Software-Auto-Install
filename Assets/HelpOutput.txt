@@ -13,14 +13,15 @@ Software:\n
     brave\t\t       Installs the Brave web browser\n
     dbeaver\t       Installs the SQL editor\n
     discord\t       Installs the Discord client\n
+    disks\t         Installs Gnome Disks utility for managing partitions\n
     diskanalyzer\t  Installs Gnome Disk Analyzer utility for viewing system storage\n
     emacs\t\t       Installs the GNU Emacs text editor\n
     evolution\t     Installs the Evolution mail client\n
     falkon\t\t      Installs the Falkon web browser\n
+    fastfetch\t     Installs the Fastfetch command line tool\n
     flatseal\t      Installs Flatseal for managing Flatpak permissions\n
     freetube\t      Installs the Freetube desktop app\n
     github\t\t      Installs the linux port of the Github Desktop app\n
-    gnomedisks\t    Installs Gnome Disks utility for managing partitions\n
     gthumb\t\t      Installs the image viewer software Gthumb\n
     heroic\t\t      Installs the Heroic client\n
     kodi\t\t        Installs the Kodi media server app\n
@@ -28,6 +29,7 @@ Software:\n
     librewolf\t     Installs the Librewolf web browser\n
     lutris\t\t      Installs the Lutris client\n
     mangohud\t      Installs the MangoHUD gaming overlay\n
+    mission\t\t     Installs the Mission Center system monitoring software\n
     neofetch\t      Installs the Neofetch command line tool\n
     plex\t\t        Installs the Plex media server app\n
     protonge\t      Installs the latest Glorious Eggroll Proton release\n
@@ -37,7 +39,6 @@ Software:\n
     protonvpn\t     Installs the ProtonVPN linux client\n
     retroarch\t     Installs the Retroarch emulator frontend\n
     signal\t\t      Installs the Signal client\n
-    skype\t\t       Installs the Skype messaging app\n
     spotify\t       Installs the Spotify client\n
     steam\t\t       Installs the Steam client\n
     telegram\t      Installs the Telegram messaging app\n

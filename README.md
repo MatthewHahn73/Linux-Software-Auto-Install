@@ -7,9 +7,24 @@
             <ul>
                 <li>The 'useflat' parameter can be passed to prioritize flatpaks, if they are available</li>
             </ul>
-        <li>The following software are required by the script and will be auto-installed if unavailable</li>
+        <li>The following packages (and any dependencies) are required by the script and will be auto-installed if unavailable</li>
         <ul>
             <li>flatpak, wget, curl, gpg, git</li>
+        </ul>
+        <li>The following aur packages will be installed for their respective software if running an arch-like distro and the useflat parameter was not added</li>
+        <ul>
+            <li>brave-bin - https://aur.archlinux.org/packages/brave-bin </li>
+            <li>librewolf-bin - https://aur.archlinux.org/packages/librewolf-bin </li>
+            <li>vscodium-bin - https://aur.archlinux.org/packages/vscodium-bin </li>
+            <li>proton-mail-bin - https://aur.archlinux.org/packages/proton-mail-bin </li>
+            <li>proton-pass - https://aur.archlinux.org/packages/proton-pass </li>
+            <li>github-desktop-bin - https://aur.archlinux.org/packages/github-desktop-bin </li>
+            <li>heroic-games-launcher - https://aur.archlinux.org/packages/heroic-games-launcher-bin </li>
+        </ul>
+        <li>The following PPA repos will be added for their respective software if running a debian-like distro and the useflat parameter was not added</li>
+        <ul>
+            <li>fastfetch - https://launchpad.net/~zhangsongcui3371/+archive/ubuntu/fastfetch </li>
+            <li>retroarch - https://launchpad.net/~libretro/+archive/ubuntu/stable </li>
         </ul>
     </ul>
 <h1>Supported Operating Systems</h1>
@@ -53,7 +68,6 @@
         <ul>
             <li>discord - Installs the Discord client</li>
             <li>signal - Installs the Signal client</li>
-            <li>skype - Installs the Skype client</li>
             <li>telegram - Installs the Telegram messaging app</li>
         </ul>
         <li>Media</li>
@@ -76,6 +90,7 @@
             <li>diskanalyzer - Installs Gnome Disk Analyzer utility for viewing system storage</li>
             <li>gthumb - Installs the image viewer software Gthumb</li>
             <li>neofetch - Installs the Neofetch command line tool</li>
+            <li>fastfetch - Installs the Fastfetch command line tool</li>
         </ul>
         <li>Utility</li>
         <ul>

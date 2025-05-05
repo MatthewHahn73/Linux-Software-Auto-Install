@@ -31,11 +31,12 @@
     "Vim",
     "Dbeaver",
     "Telegram",
-    "Skype",
     "Retroarch",
     "Disks",
     "Diskanalyzer",
     "Neofetch",
     "Gthumb", 
-    "Libreoffice"
+    "Libreoffice", 
+    "Fastfetch",
+    "Mission"
 ]
