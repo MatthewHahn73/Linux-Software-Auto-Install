@@ -40,7 +40,7 @@
             # Caching issue?
 
 InstallOptions=("$@")
-CurrentUser=`echo $SUDO_USER`
+CurrentUser=`(eval echo "$USER")`
 CurrentOS=`grep '^NAME' /etc/os-release` 
 CurrentOSReadable=`echo "$CurrentOS" | cut -d'"' -f 2`
 DownloadDir="/home/"$CurrentUser"/Downloads"
@@ -93,15 +93,15 @@ function FuncDownloadAndExtractRepo() {
         fi 
     done
     
-    mkdir -p $DownloadLocation
+    sudo mkdir -p $DownloadLocation
     echo "Downloading file(s) from '$DesiredURL' ..."
-    curl -sOL --output-dir $DownloadLocation ${DesiredURL}
+    sudo curl -sOL --output-dir $DownloadLocation ${DesiredURL}
 
     if [ $Filetype = ".tar.gz" ]; then                      #File is an archive, need to extract
         local TarFileName="$(find $DownloadLocation  -name "*$Filetype")"
         echo "Extracting file(s) from '$TarFileName' ... "
-        tar xzf $TarFileName -C $DownloadLocation
-        rm $TarFileName
+        sudo tar xzf $TarFileName -C $DownloadLocation
+        sudo rm $TarFileName
     fi 
 }
 
@@ -456,7 +456,7 @@ function FuncInstallProtonpass() {
             dpkg -i ProtonPass-desktop.deb
             rm ProtonPass-desktop.deb
         elif [ $CurrentPackageManager = "pacman" ]; then
-            yay -S proton-pass --sudoloop --noconfirm
+            yay -S proton-pass-bin --sudoloop --noconfirm
         fi 
     fi 
 }
@@ -495,7 +495,7 @@ function FuncInstallHeroic() {
             cd $DownloadDir/Heroic
             dpkg -i $HeroicDebFile
         elif [ $CurrentPackageManager = "pacman" ]; then 
-            yay -S heroic-games-launcher --sudoloop --noconfirm
+            yay -S heroic-games-launcher-bin --sudoloop --noconfirm
         fi 
     fi     
 }
@@ -628,12 +628,12 @@ function FuncInstallLibreoffice() {
     fi     
 }
 
-function FuncInstallProtonge() {            
+function FuncInstallProtonge() { 
     FuncDownloadAndExtractRepo "Proton" "GloriousEggroll/proton-ge-custom" ".tar.gz"
     local ProtonDownloadFolder="$(find "/home/$CurrentUser/Downloads/Proton/" -name "GE-Proton*")"
     local ProtonSteamFolder="/home/$CurrentUser/.steam/steam/compatibilitytools.d"
-    mkdir -p $ProtonSteamFolder
-    cp -r $ProtonDownloadFolder $ProtonSteamFolder
+    sudo mkdir -p $ProtonSteamFolder
+    sudo cp -r $ProtonDownloadFolder $ProtonSteamFolder
 }
 
 function FuncInstallKodi() {
