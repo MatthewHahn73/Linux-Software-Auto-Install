@@ -13,7 +13,7 @@ Software:\n
     brave\t\t       Installs the Brave web browser\n
     dbeaver\t       Installs the SQL editor\n
     discord\t       Installs the Discord client\n
-    disks\t         Installs Gnome Disks utility for managing partitions\n
+    disks\t\t       Installs Gnome Disks utility for managing partitions\n
     diskanalyzer\t  Installs Gnome Disk Analyzer utility for viewing system storage\n
     emacs\t\t       Installs the GNU Emacs text editor\n
     evolution\t     Installs the Evolution mail client\n
@@ -29,7 +29,7 @@ Software:\n
     librewolf\t     Installs the Librewolf web browser\n
     lutris\t\t      Installs the Lutris client\n
     mangohud\t      Installs the MangoHUD gaming overlay\n
-    mission\t\t     Installs the Mission Center system monitoring software\n
+    mission\t       Installs the Mission Center system monitoring software\n
     neofetch\t      Installs the Neofetch command line tool\n
     plex\t\t        Installs the Plex media server app\n
     protonge\t      Installs the latest Glorious Eggroll Proton release\n
