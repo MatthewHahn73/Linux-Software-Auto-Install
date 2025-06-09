@@ -559,7 +559,9 @@ function FuncInstallTelegram() {
 }
 
 function FuncInstallSignal() {
-    if [ $CurrentPackageManager = "apt" ] && ! $UseFlatpaks; then 
+    if [ $CurrentPackageManager = "dnf" ] || $UseFlatpaks; then     #No official dnf support, if Fedora based distro, use the flatpak
+        flatpak install flathub org.signal.Signal -y
+    elif [ $CurrentPackageManager = "apt" ]; then
         wget -O- https://updates.signal.org/desktop/apt/keys.asc \
             | gpg --dearmor > signal-desktop-keyring.gpg
         cat signal-desktop-keyring.gpg \
@@ -567,21 +569,23 @@ function FuncInstallSignal() {
         echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/signal-desktop-keyring.gpg] https://updates.signal.org/desktop/apt xenial main' \
             | tee /etc/apt/sources.list.d/signal-xenial.list
         sudo apt-get update && sudo apt-get install signal-desktop
-    else    #Signal only officially supported on apt package manager
-        flatpak install flathub org.signal.Signal -y
-    fi 
+    elif [ $CurrentPackageManager = "pacman" ]; then
+        sudo pacman -S signal-desktop --noconfirm --needed
+    fi
 }
 
 function FuncInstallSpotify() {
-    if [ $CurrentPackageManager = "apt" ] && ! $UseFlatpaks; then 
+    if [ $CurrentPackageManager = "dnf" ] || $UseFlatpaks; then     #No official dnf support, if Fedora based distro, use the flatpak
+        flatpak install flathub com.spotify.Client -y
+    elif [ $CurrentPackageManager = "apt" ]; then
         curl -sS https://download.spotify.com/debian/pubkey_6224F9941A8AA6D1.gpg \
             | gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg
         echo "deb http://repository.spotify.com stable non-free" \
             | tee /etc/apt/sources.list.d/spotify.list
         sudo apt-get update && sudo apt-get install spotify-client -y
-    else    #Spotify only officially supported on apt package manager
-        flatpak install flathub com.spotify.Client -y
-    fi 
+    elif [ $CurrentPackageManager = "pacman" ]; then
+        sudo pacman -S spotify-launcher --noconfirm --needed
+    fi
 }
 
 function FuncInstallVlc() {
