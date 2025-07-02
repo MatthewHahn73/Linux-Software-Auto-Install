@@ -14,7 +14,7 @@
         # Freetube 
         # Bottles
         # ProtonUp-Qt
-    # The following only have official packages on the apt package manager and will install flatpaks otherwise: 
+    # The following only have official packages on the apt package manager and extra arch repos. Will install flatpaks on other distros:
         # Signal 
         # Spotify
     # The following require AUR packages (and their dependencies) for installation on arch-like distros
@@ -52,7 +52,7 @@ case "$CurrentOSReadable" in                                                 #De
         CurrentPackageManager="dnf" ;;
     *Ubuntu*|*Lubuntu*|*Xubuntu*|*Kubuntu*|*Elementary*|*Pop*|*Mint*|*Debian*)
         CurrentPackageManager="apt" ;; 
-    *Arch*|*Endeavour*|*Manjaro*) 
+    *Arch*|*Endeavour*|*Manjaro*|*CachyOS*)
         CurrentPackageManager="pacman" ;;
     *) 
         echo "Error - Unsupported OS:" $CurrentOSReadable
