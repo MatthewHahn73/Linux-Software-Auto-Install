@@ -31,15 +31,15 @@
     <ul>
         <li>RPM-based</li>
         <ul>
-            <li>Fedora, CentOS, Nobara</li>
+            <li>Fedora, Nobara, CentOS</li>
         </ul>
         <li>DKPG-based</li>
         <ul>
-            <li>Ubuntu & Ubuntu variants (Lubuntu, Xubuntu, Kubuntu), Elementary, PopOS, Mint, Debian</li>
+            <li>Debian, Ubuntu (Lubuntu, Xubuntu, Kubuntu, etc), Elementary, PopOS, Mint, Kali</li>
         </ul>
         <li>Pacman-based</li>
         <ul>
-            <li>Arch, EndeavourOS, Manjaro</li>
+            <li>Arch, Manjaro, EndeavourOS, CachyOS, SteamOS</li>
         </ul>
     </ul>
 
@@ -75,16 +75,17 @@
             <li>freetube - Installs the Freetube desktop app</li>
             <li>kodi - Installs the Kodi media server app</li>
             <li>vlc - Installs the VLC media player</li>
-            <li>plex - Installs the Plex media server app</li>   
+            <li>plex - Installs the Plex media server app</li> 
             <li>spotify - Installs the Spotify client</li>
         </ul>
         <li>Productivity</li>
         <ul>
             <li>libreoffice - Installs the entire Libreoffice software suite</li>
+            <li>gimp - Installs the photo editing software</li>
+            <li>handbrake - Installs the video encoder software</li>
         </ul>
         <li>System</li>
         <ul>
-            <li>bottles - Installs the Windows compatibility software Bottles</li>
             <li>flatseal - Installs Flatseal for managing Flatpak permissions</li>
             <li>disks - Installs Gnome Disks utility for managing partitions</li>
             <li>diskanalyzer - Installs Gnome Disk Analyzer utility for viewing system storage</li>
@@ -95,8 +96,10 @@
         </ul>
         <li>Utility</li>
         <ul>
+            <li>bottles - Installs the Windows compatibility software Bottles</li>
+            <li>filezilla - Installs the ftp client</li>
             <li>boxes - Installs the Gnome-Boxes VM software</li>
-            <li>timeshift - Installs the Timeshift app</li>    
+            <li>timeshift - Installs the Timeshift app</li> 
             <li>protonpass - Installs the ProtonPass linux client</li>
             <li>protonvpn - Installs the ProtonVPN linux client</li>
         </ul>
@@ -115,7 +118,6 @@
             <li>mangohud - Installs the MangoHud game overlay software</li>
             <li>steam - Installs the Steam client</li>
             <li>protonge - Installs the latest Glorious Eggroll Proton release from its repository</li>
-            <li>protonupqt - Installs the ProtonUp-Qt compatibility tool</li> 
             <li>heroic - Installs the Heroic client</li>
             <li>retroarch - Installs the Retroarch emulator frontend</li>
         </ul>

@@ -1,8 +1,8 @@
 Permission requirements: root\n\n
 Supports:\n
-    RPM:\t\t        Fedora, CentOS, Nobara\n
-    DKPG:\t\t       Ubuntu, Lubuntu, Xubuntu, Kubuntu, Elementary, PopOS, Mint, Debian\n 
-    Pacman:\t       Arch, EndeavourOS, Manjaro\n\n
+    RPM:\t\t        Fedora, Nobara, CentOS\n
+    DKPG:\t\t       Debian, Ubuntu (Lubuntu, Xubuntu, Kubuntu, etc), Elementary, PopOS, Mint, Kali\n
+    Pacman:\t       Arch, Manjaro, EndeavourOS, CachyOS, SteamOS\n\n
 Options:\n
     help\t\t        Show available install options\n
     quiet\t\t       Show less output in the console\n
@@ -19,10 +19,13 @@ Software:\n
     evolution\t     Installs the Evolution mail client\n
     falkon\t\t      Installs the Falkon web browser\n
     fastfetch\t     Installs the Fastfetch command line tool\n
+    filezilla\t     Installs the FTP client Filezilla\n
     flatseal\t      Installs Flatseal for managing Flatpak permissions\n
     freetube\t      Installs the Freetube desktop app\n
+    gimp\t\t        Installs the photo editing software GIMP\n
     github\t\t      Installs the linux port of the Github Desktop app\n
     gthumb\t\t      Installs the image viewer software Gthumb\n
+    handbrake\t     Installs the video encoder software Handbrake\n
     heroic\t\t      Installs the Heroic client\n
     kodi\t\t        Installs the Kodi media server app\n
     libreoffice\t   Installs the entire Libreoffice software suite\n
@@ -35,7 +38,6 @@ Software:\n
     protonge\t      Installs the latest Glorious Eggroll Proton release\n
     protonmail\t    Installs the ProtonMail linux client\n
     protonpass\t    Installs the ProtonPass linux client\n
-    protonupqt\t    Installs the ProtonUp-Qt compatibility tool\n
     protonvpn\t     Installs the ProtonVPN linux client\n
     retroarch\t     Installs the Retroarch emulator frontend\n
     signal\t\t      Installs the Signal client\n

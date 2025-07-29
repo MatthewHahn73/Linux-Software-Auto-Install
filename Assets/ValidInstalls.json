@@ -7,13 +7,13 @@
     "Spotify",
     "Mangohud",
     "Protonge",
-    "Vscode",
     "Emacs",
     "Protonvpn",
     "Protonmail",
     "Protonpass",
     "Flatseal",
     "Brave",
+    "Vscode",
     "Vscodium",
     "Boxes",
     "Github",
@@ -25,7 +25,6 @@
     "Thunderbird",
     "Timeshift",
     "Plex",
-    "Protonupqt",
     "Falkon",
     "Evolution",
     "Vim",
@@ -38,5 +37,8 @@
     "Gthumb", 
     "Libreoffice", 
     "Fastfetch",
-    "Mission"
+    "Mission",
+    "Handbrake",
+    "Filezilla",
+    "Gimp"
 ]
