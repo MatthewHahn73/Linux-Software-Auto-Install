@@ -622,7 +622,7 @@ function FuncInstallHandbrake() {
         if [ $CurrentPackageManager = "apt" ]; then
             sudo apt-get install handbrake -y
         elif [ $CurrentPackageManager = "dnf" ]; then
-            sudo dnf install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+            sudo dnf install https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
             sudo dnf install handbrake handbrake-gui
         elif [ $CurrentPackageManager = "pacman" ]; then
             sudo pacman -S handbrake --noconfirm --needed
@@ -665,7 +665,7 @@ function FuncInstallKodi() {
         if [ $CurrentPackageManager = "apt" ]; then
             sudo apt-get install kodi -y
         elif [ $CurrentPackageManager = "dnf" ]; then
-            sudo dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+            sudo dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
             sudo dnf install kodi -y
         elif [ $CurrentPackageManager = "pacman" ]; then
             sudo pacman -S kodi --noconfirm --needed
@@ -718,8 +718,7 @@ case "$CurrentOSReadable" in   #Determine the user's package manager by distro n
         exit 1
 esac
 
-#Determine if the optional parameters were passed, if they were, set the flag and remove them from the list
-if [[ $(echo "${InstallOptions[@]}" | grep -F -w "quiet") ]]; then
+if [[ $(echo "${InstallOptions[@]}" | grep -F -w "quiet") ]]; then  #Determine if the optional parameters were passed, if they were, set the flag and remove them from the list
     Quiet=true
 fi
 

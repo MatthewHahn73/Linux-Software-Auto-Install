@@ -1,124 +1,118 @@
 # linux-software-auto-install
-<p>Shell script to install some common software on a fresh linux installation</p>
 
-<h3>Script Information</h3>
-    <ul>
-        <li>The script will install software from traditional package managers, using RPM or PPA repos when available</li>
-            <ul>
-                <li>The 'useflat' parameter can be passed to prioritize flatpaks, if they are available</li>
-            </ul>
-        <li>The following packages (and any dependencies) are required by the script and will be auto-installed if unavailable</li>
-        <ul>
-            <li>flatpak, wget, curl, gpg, git</li>
-        </ul>
-        <li>The following aur packages will be installed for their respective software if running an arch-like distro and the useflat parameter was not added</li>
-        <ul>
-            <li>brave-bin - https://aur.archlinux.org/packages/brave-bin </li>
-            <li>librewolf-bin - https://aur.archlinux.org/packages/librewolf-bin </li>
-            <li>vscodium-bin - https://aur.archlinux.org/packages/vscodium-bin </li>
-            <li>proton-mail-bin - https://aur.archlinux.org/packages/proton-mail-bin </li>
-            <li>proton-pass - https://aur.archlinux.org/packages/proton-pass </li>
-            <li>github-desktop-bin - https://aur.archlinux.org/packages/github-desktop-bin </li>
-            <li>heroic-games-launcher - https://aur.archlinux.org/packages/heroic-games-launcher-bin </li>
-        </ul>
-        <li>The following PPA repos will be added for their respective software if running a debian-like distro and the useflat parameter was not added</li>
-        <ul>
-            <li>fastfetch - https://launchpad.net/~zhangsongcui3371/+archive/ubuntu/fastfetch </li>
-            <li>retroarch - https://launchpad.net/~libretro/+archive/ubuntu/stable </li>
-        </ul>
-    </ul>
-<h1>Supported Operating Systems</h1>
-    <ul>
-        <li>RPM-based</li>
-        <ul>
-            <li>Fedora, Nobara, CentOS</li>
-        </ul>
-        <li>DKPG-based</li>
-        <ul>
-            <li>Debian, Ubuntu (Lubuntu, Xubuntu, Kubuntu, etc), Elementary, PopOS, Mint, Kali</li>
-        </ul>
-        <li>Pacman-based</li>
-        <ul>
-            <li>Arch, Manjaro, EndeavourOS, CachyOS, SteamOS</li>
-        </ul>
-    </ul>
+Shell script to install some common software on a fresh linux installation
 
-<h1>Basic Script Arguments</h1>
-    <ul>
-        <li>help - Show available install options</li>
-        <li>quiet - Show less output in the console</li>
-        <li>useflat - Prioritizes flatpaks, if available</li>
-    </ul>
+## Supported Operating Systems
 
-<h1>Available Installs</h1>
-    <ul>
-        <li>Web Browsers</li>
-        <ul>
-            <li>brave - Installs the Brave web browser</li>
-            <li>librewolf - Installs the Librewolf web browser</li> 
-            <li>falkon - Installs the Falkon web browser</li> 
-        </ul>
-        <li>Mail Clients</li>
-        <ul>
-            <li>protonmail - Installs the ProtonMail linux client</li>
-            <li>thunderbird - Installs the Thunderbird mail client</li>
-            <li>evolution - Installs the Evolution mail client</li>
-        </ul>
-        <li>Messaging</li>
-        <ul>
-            <li>discord - Installs the Discord client</li>
-            <li>signal - Installs the Signal client</li>
-            <li>telegram - Installs the Telegram messaging app</li>
-        </ul>
-        <li>Media</li>
-        <ul>
-            <li>freetube - Installs the Freetube desktop app</li>
-            <li>kodi - Installs the Kodi media server app</li>
-            <li>vlc - Installs the VLC media player</li>
-            <li>plex - Installs the Plex media server app</li> 
-            <li>spotify - Installs the Spotify client</li>
-        </ul>
-        <li>Productivity</li>
-        <ul>
-            <li>libreoffice - Installs the entire Libreoffice software suite</li>
-            <li>gimp - Installs the photo editing software</li>
-            <li>handbrake - Installs the video encoder software</li>
-        </ul>
-        <li>System</li>
-        <ul>
-            <li>flatseal - Installs Flatseal for managing Flatpak permissions</li>
-            <li>disks - Installs Gnome Disks utility for managing partitions</li>
-            <li>diskanalyzer - Installs Gnome Disk Analyzer utility for viewing system storage</li>
-            <li>gthumb - Installs the image viewer software Gthumb</li>
-            <li>neofetch - Installs the Neofetch command line tool</li>
-            <li>fastfetch - Installs the Fastfetch command line tool</li>
-            <li>mission - Installs the Mission Center resource monitoring tool</li>
-        </ul>
-        <li>Utility</li>
-        <ul>
-            <li>bottles - Installs the Windows compatibility software Bottles</li>
-            <li>filezilla - Installs the ftp client</li>
-            <li>boxes - Installs the Gnome-Boxes VM software</li>
-            <li>timeshift - Installs the Timeshift app</li> 
-            <li>protonpass - Installs the ProtonPass linux client</li>
-            <li>protonvpn - Installs the ProtonVPN linux client</li>
-        </ul>
-        <li>Developer Tools</li>
-        <ul>
-            <li>emacs - Installs the GNU Emacs text editor</li>
-            <li>vscode - Installs the Visual Studio Code text editor</li>
-            <li>vscodium - Installs the telemetry-free version of Visual Studio Code</li>
-            <li>dbeaver - Installs the Dbeaver SQL editor</li>
-            <li>vim - Installs the terminal text editor Vim</li>
-            <li>github - Installs the linux port of the Github Desktop app</li>
-        </ul>
-        <li>Gaming Software</li>
-        <ul>
-            <li>lutris - Installs the Lutris client</li>
-            <li>mangohud - Installs the MangoHud game overlay software</li>
-            <li>steam - Installs the Steam client</li>
-            <li>protonge - Installs the latest Glorious Eggroll Proton release from its repository</li>
-            <li>heroic - Installs the Heroic client</li>
-            <li>retroarch - Installs the Retroarch emulator frontend</li>
-        </ul>
-    </ul> 
+- Fedora-like
+  - Fedora, Nobara, CentOS
+- Debian-like
+  - Debian, Ubuntu, Lubuntu, Xubuntu, Kubuntu, Elementary, PopOS, Mint, Kali
+- Arch-like
+  - Arch, Manjaro, EndeavourOS, CachyOS, SteamOS
+
+## Script Dependencies
+
+Any dependencies and/or required repositories will be installed along with the software
+
+- The following packages (and any dependencies) are required by the script and will be auto-installed if unavailable
+  - flatpak, wget, curl, gpg, git
+- The following install options will have these PPA repositories added (if no allowflat parameter):
+  - fastfetch - <a href="https://launchpad.net/~zhangsongcui3371/+archive/ubuntu/fastfetch">launchpad Link</a>
+  - retroarch - <a href="https://launchpad.net/~libretro/+archive/ubuntu/stable">launchpad Link</a>
+- The following install options will have the non-free or free RPM repositories added on fedora-like distros (if no allowflat parameter):
+  - steam
+  - discord
+  - handbrake
+  - free
+  - vlc
+  - kodi
+- The following install options will have these AUR packages installed if running an arch-like distro (if allowaur and no allowflat)
+  - brave-bin - <a href="https://aur.archlinux.org/packages/brave-bin">AUR Link</a>
+  - librewolf-bin - <a href="https://aur.archlinux.org/packages/librewolf-bin">AUR Link</a>
+  - vscodium-bin - <a href="https://aur.archlinux.org/packages/vscodium-bin">AUR Link</a>
+  - proton-mail-bin - <a href="https://aur.archlinux.org/packages/proton-mail-bin">AUR Link</a>
+  - proton-pass - <a href="https://aur.archlinux.org/packages/proton-pass">AUR Link</a>
+  - github-desktop-bin - <a href="https://aur.archlinux.org/packages/github-desktop-bin">AUR Link</a>
+  - heroic-games-launcher - <a href="https://aur.archlinux.org/packages/heroic-games-launcher-bin">AUR Link</a>
+
+## Basic Script Arguments
+
+Add these arguments to the script call for modifications to script functionality
+
+- help - Show available install options
+- quiet - Show less output in the console
+- allowflat - Prioritizes flatpaks, if available, over package manager packages
+- allowaur - Allows for AUR package installs if on an arch-like distro
+
+## Install Arguments
+
+Add these arguments to the script call to install the respective software
+
+### Web Browsers
+
+- brave - Installs the Brave web browser
+- librewolf - Installs the Librewolf web browser
+- falkon - Installs the Falkon web browser
+
+### Mail Clients
+
+- protonmail - Installs the ProtonMail linux client
+- thunderbird - Installs the Thunderbird mail client
+- evolution - Installs the Evolution mail client
+
+### Messaging
+
+- discord - Installs the Discord client
+- signal - Installs the Signal client
+- telegram - Installs the Telegram client
+
+### Media
+
+- freetube - Installs the Freetube desktop app
+- kodi - Installs the Kodi media server app
+- vlc - Installs the VLC media player
+- plex - Installs the Plex media server app
+- spotify - Installs the Spotify client
+
+### Productivity
+
+- libreoffice - Installs the entire Libreoffice software suite
+- gimp - Installs the photo editing software
+- handbrake - Installs the video encoder software
+
+### System
+
+- flatseal - Installs Flatseal for managing Flatpak permissions
+- disks - Installs Gnome Disks utility for managing partitions
+- diskanalyzer - Installs Gnome Disk Analyzer utility for viewing system storage
+- gthumb - Installs the image viewer software Gthumb
+- neofetch - Installs the Neofetch command line tool
+- fastfetch - Installs the Fastfetch command line tool
+- mission - Installs the Mission Center resource monitoring tool
+
+### Utility
+
+- mangohud - Installs the MangoHud overlay software
+- bottles - Installs the Windows compatibility software Bottles
+- filezilla - Installs the ftp client
+- timeshift - Installs the Timeshift app
+- protonpass - Installs the ProtonPass linux client
+- protonvpn - Installs the ProtonVPN linux client
+
+### Developer Tools
+
+- emacs - Installs the GNU Emacs text editor
+- vim - Installs the terminal text editor Vim
+- vscode - Installs the Visual Studio Code text editor
+- vscodium - Installs the telemetry-free version of Visual Studio Code
+- dbeaver - Installs the Dbeaver SQL editor
+- github - Installs the linux port of the Github Desktop app
+
+### Gaming Software
+
+- steam - Installs the Steam client
+- lutris - Installs the Lutris client
+- heroic - Installs the Heroic client
+- retroarch - Installs the Retroarch emulator frontend
+- protonge - Installs the latest Glorious Eggroll Proton release from its repository
